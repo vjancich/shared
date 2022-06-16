@@ -1,0 +1,75 @@
+name: Request to deploy application
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment'
+        type: string
+        required: true
+        default: tst
+      software_version:
+        description: "Software version to deploy"
+        type: string
+        required: true
+      stack_name:
+        description: "Stack name of CloudFormation (if not set - project artifactId)"
+        type: string
+        required: false
+      template_name:
+        description: "CloudFormation template name (if not set - project artifactId)"
+        type: string
+        required: false
+      cfg_repo:
+        description: "CloudFormation template name (if not set - project artifactId)"
+        type: string
+        required: false
+      REPOSIOTRY_NAME:
+        description: "Deployment job repository (change if deployment request is in different repository than deployment workflow)"
+        type: string
+        required: false
+    secrets:
+      CICD_GITHUB_WORKFLOW_TOKEN:
+        required: true
+      REPO_ACCESS_TOKEN:
+        required: true
+
+jobs:
+  list-customers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: vjancich/${{ inputs.cfg_repo }}
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+      - id: set-matrix
+        run: |
+          echo "::set-output name=matrix::$(ls -1 cloudformation/ | tr -d /  | jq -R -s -c 'split("\n")[:-1]')"
+          ehoj=$(ls -1 cloudformation/ | tr -d /  | jq -R -s -c 'split("\n")[:-1]')
+          echo $ehoj
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+  trigger_deployment_workflow:
+    needs: list-customers
+    name: '[${{ inputs.environment }}] Triggering deployment workflow for: ${{ inputs.template_name }}'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare deployment parameters
+        id: deployment_parameters
+        run: |
+          echo "${{needs.list-customers.outputs.matrix}}"
+
+      - name: Sending deployment request
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: ${{ inputs.environment }}_deployment_request_event
+          repository: vjancich/odm-eureka-app
+          client-payload: '{
+             "environment": "${{ inputs.environment }}",
+             "account_name": ["davincicloud - adaxio","ohp - dudley - test"],
+             "software_version": "${{ steps.deployment_parameters.outputs.software_version }}",
+             "stack_name": "${{ steps.deployment_parameters.outputs.stack_name}}",
+             "template_name": "${{ steps.deployment_parameters.outputs.template_name}}"
+           }'
