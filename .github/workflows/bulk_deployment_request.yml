@@ -47,11 +47,8 @@ jobs:
           echo "::set-output name=matrix::$(ls -1 cloudformation/ | tr -d /  | jq -R -s -c 'split("\n")[:-1]')"
           test=$(ls -1 cloudformation/ | tr -d /  | jq -R -s -c 'split("\n")[:-1]')
           echo $test
-
-
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      accountid: ${{ steps.set-matrix.outputs.accountid }}
 
   trigger_deployment_workflow:
     needs: list-customers
@@ -74,37 +71,37 @@ jobs:
           echo "accountid $ACCOUNTID"
           echo "::set-output name=accountid::$ACCOUNTID"
 
-      - name: Prepare deployment parameters
-        id: deployment_parameters
-        run: |
-          echo "${{needs.list-customers.outputs.matrix}}"
+#      - name: Prepare deployment parameters
+#        id: deployment_parameters
+#        run: |
+#          echo "${{needs.list-customers.outputs.matrix}}"
+#
+#      - name: Deployment payload
+#        run: |
+#          echo "################################################################################"
+#          echo "                         DEPLOYMENT REQUEST FOR                                 "
+#          echo "Environment:          ${{ inputs.environment }}                                 "
+#          echo "Account name:         ${{ steps.getaccountid.outputs.accountid}}                 "
+#          echo "Version:              ${{ inputs.software_version }}                            "
+#          echo "Stack name:           ${{ inputs.stack_name }}                                  "
+#          echo "Template name:        ${{ inputs.template_name }}                               "
+#          echo "################################################################################"
+#
+#      - name: Preparing product dependent parameters
+#        id: product_parameters
+#        run: |
+#          echo "cav"
 
-      - name: Deployment payload
-        run: |
-          echo "################################################################################"
-          echo "                         DEPLOYMENT REQUEST FOR                                 "
-          echo "Environment:          ${{ inputs.environment }}                                 "
-          echo "Account name:         ${{ needs.list-customers.outputs.accountid}}                 "
-          echo "Version:              ${{ inputs.software_version }}                            "
-          echo "Stack name:           ${{ inputs.stack_name }}                                  "
-          echo "Template name:        ${{ inputs.template_name }}                               "
-          echo "################################################################################"
-
-      - name: Preparing product dependent parameters
-        id: product_parameters
-        run: |
-          echo "cav"
-
-#      - name: Sending deployment request
-#        uses: peter-evans/repository-dispatch@v1
-#        with:
-#          token: ${{ secrets.REPO_ACCESS_TOKEN }}
-#          event-type: ${{ inputs.environment }}_deployment_request_event
-#          repository: vjancich/odm-eureka-app
-#          client-payload: '{
-#             "environment": "${{ inputs.environment }}",
-#             "account_name": ${{needs.list-customers.outputs.matrix}},
-#             "software_version": "${{ steps.deployment_parameters.outputs.software_version }}",
-#             "stack_name": "${{ steps.deployment_parameters.outputs.stack_name}}",
-#             "template_name": "${{ steps.deployment_parameters.outputs.template_name}}"
-#           }'
+      - name: Sending deployment request
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: ${{ inputs.environment }}_deployment_request_event
+          repository: vjancich/odm-eureka-app
+          client-payload: '{
+             "environment": "${{ inputs.environment }}",
+             "account_id": ${{ steps.getaccountid.outputs.accountid}},
+             "software_version": "${{ steps.deployment_parameters.outputs.software_version }}",
+             "stack_name": "${{ steps.deployment_parameters.outputs.stack_name}}",
+             "template_name": "${{ steps.deployment_parameters.outputs.template_name}}"
+           }'

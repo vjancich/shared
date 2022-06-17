@@ -8,7 +8,7 @@ on:
         type: string
         required: true
         default: tst
-      account_name:
+      account_id:
         description: "Name of AWS account for deployment"
         type: string
         required: true
@@ -45,7 +45,7 @@ jobs:
           echo "################################################################################"
           echo "                         DEPLOYMENT REQUEST FOR                                 "
           echo "Environment:          ${{ inputs.environment }}                                 "
-          echo "Account name:         ${{ inputs.account_name }}                                "
+          echo "Account name:         ${{ inputs.account_id }}                                "
           echo "Version:              ${{ inputs.software_version }}                            "
           echo "Stack name:           ${{ inputs.stack_name }}                                  "
           echo "Template name:        ${{ inputs.template_name }}                               "
