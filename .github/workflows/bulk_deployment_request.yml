@@ -68,7 +68,7 @@ jobs:
           repository: vjancich/odm-eureka-app
           client-payload: '{
              "environment": "${{ inputs.environment }}",
-             "account_name": "${{needs.list-customers.outputs.matrix}}",
+             "account_name": ${{needs.list-customers.outputs.matrix}},
              "software_version": "${{ steps.deployment_parameters.outputs.software_version }}",
              "stack_name": "${{ steps.deployment_parameters.outputs.stack_name}}",
              "template_name": "${{ steps.deployment_parameters.outputs.template_name}}"
