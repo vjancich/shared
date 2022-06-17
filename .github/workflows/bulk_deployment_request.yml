@@ -59,11 +59,6 @@ jobs:
       matrix:
         customers: ${{ fromJson(needs.list-customers.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
-        with:
-          repository: vjancich/${{ inputs.cfg_repo }}
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
-
       - name: Get account id
         id: getaccountid
         run: |
