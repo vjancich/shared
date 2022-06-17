@@ -47,8 +47,17 @@ jobs:
           echo "::set-output name=matrix::$(ls -1 cloudformation/ | tr -d /  | jq -R -s -c 'split("\n")[:-1]')"
           test=$(ls -1 cloudformation/ | tr -d /  | jq -R -s -c 'split("\n")[:-1]')
           echo $test
+
+      - name: Get account id
+        id: getaccountid
+        run: |
+          ACCOUNTID=$( cat cloudformation/${{matrix.customers}}/account_id )
+          echo "accountid $ACCOUNTID"
+          echo "::set-output name=accountid::$ACCOUNTID"
+
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      accountid: ${{ steps.set-matrix.outputs.accountid }}
 
   trigger_deployment_workflow:
     needs: list-customers
@@ -65,13 +74,12 @@ jobs:
         run: |
           echo "${{needs.list-customers.outputs.matrix}}"
 
-
       - name: Deployment payload
         run: |
           echo "################################################################################"
           echo "                         DEPLOYMENT REQUEST FOR                                 "
           echo "Environment:          ${{ inputs.environment }}                                 "
-          echo "Account name:         ${{ needs.list-customers.outputs.matrix}}                 "
+          echo "Account name:         ${{ needs.list-customers.outputs.accountid}}                 "
           echo "Version:              ${{ inputs.software_version }}                            "
           echo "Stack name:           ${{ inputs.stack_name }}                                  "
           echo "Template name:        ${{ inputs.template_name }}                               "
