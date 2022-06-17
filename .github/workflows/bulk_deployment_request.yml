@@ -59,18 +59,6 @@ jobs:
       matrix:
         customers: ${{ fromJson(needs.list-customers.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
-        with:
-          repository: vjancich/${{ inputs.cfg_repo }}
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
-
-      - name: Get account name
-        id: getaccountname
-        run: |
-          ACCOUNT_NAME=${{matrix.customers}}
-          echo "account_name $ACCOUNT_NAME"
-          echo "::set-output name=account_name::$ACCOUNT_NAME"
-
 #      - name: Prepare deployment parameters
 #        id: deployment_parameters
 #        run: |
