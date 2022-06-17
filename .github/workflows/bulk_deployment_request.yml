@@ -67,8 +67,7 @@ jobs:
       - name: Get account name
         id: getaccountname
         run: |
-          cd ${{ inputs.cfg_repo }}/cloudformation/${{matrix.customers}}
-          ACCOUNT_NAME=$( basename "$PWD" )
+          ACCOUNT_NAME=${{matrix.customers}}
           echo "account_name $ACCOUNT_NAME"
           echo "::set-output name=account_name::$ACCOUNT_NAME"
 
