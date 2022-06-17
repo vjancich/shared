@@ -59,12 +59,17 @@ jobs:
       matrix:
         customers: ${{ fromJson(needs.list-customers.outputs.matrix) }}
     steps:
-      - name: Get account id
-        id: getaccountid
+      - uses: actions/checkout@v2
+        with:
+          repository: vjancich/${{ inputs.cfg_repo }}
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+
+      - name: Get account name
+        id: getaccountname
         run: |
-          ACCOUNTID=$( cat cloudformation/${{matrix.customers}}/account_id )
-          echo "accountid $ACCOUNTID"
-          echo "::set-output name=accountid::$ACCOUNTID"
+          ACCOUNT_NAME=$( basename "$PWD" )
+          echo "account_name $ACCOUNT_NAME"
+          echo "::set-output name=account_name::$ACCOUNT_NAME"
 
 #      - name: Prepare deployment parameters
 #        id: deployment_parameters
@@ -95,7 +100,7 @@ jobs:
           repository: vjancich/odm-eureka-app
           client-payload: '{
              "environment": "${{ inputs.environment }}",
-             "account_id": ${{ steps.getaccountid.outputs.accountid}},
+             "account_name": ${{ steps.getaccountname.outputs.account_name }},
              "software_version": "${{ steps.deployment_parameters.outputs.software_version }}",
              "stack_name": "${{ steps.deployment_parameters.outputs.stack_name}}",
              "template_name": "${{ steps.deployment_parameters.outputs.template_name}}"
