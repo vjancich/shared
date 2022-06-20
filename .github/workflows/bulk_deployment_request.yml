@@ -51,7 +51,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
   trigger_deployment_workflow:
-    uses: ohpen/shared-java-workflow-template/.github/workflows/deployment_request.yml@main
+    uses: vjancich/shared/.github/workflows/deployment_request.yml@main
     with:
       environment: ${{ github.event.inputs.environment }}
       account_name: ${{ needs.list-customers.outputs.matrix }}
