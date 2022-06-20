@@ -8,6 +8,11 @@ on:
         type: string
         required: true
         default: tst
+      account_name:
+        description: "Name of AWS account for deployment"
+        type: string
+        required: true
+        default: davincicloud-davinciservices
       software_version:
         description: "Software version to deploy"
         type: string
@@ -51,15 +56,14 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
   trigger_deployment_workflow:
-    uses: ohpen/shared-java-workflow-template/.github/workflows/deployment_request.yml@main
-    with:
-      environment: ${{ github.event.inputs.environment }}
-      account_name: ${{ needs.list-customers.outputs.matrix }}
-      software_version: ${{ github.event.inputs.software_version }}
-      stack_name: ${{ github.event.inputs.stack_name }}
-      template_name: ${{ github.event.inputs.template_name }}
-    secrets:
-      CICD_GITHUB_WORKFLOW_TOKEN: ${{ secrets.CICD_GITHUB_WORKFLOW_TOKEN }}
+    needs: list-customers
+    name: '[${{ inputs.environment }}] Triggering deployment workflow for: ${{ inputs.template_name }}'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        customers: ${{ fromJson(inputs.account_name) }}
+    steps:
 #      - name: Prepare deployment parameters
 #        id: deployment_parameters
 #        run: |
@@ -81,16 +85,16 @@ jobs:
 #        run: |
 #          echo "cav"
 
-#      - name: Sending deployment request
-#        uses: peter-evans/repository-dispatch@v1
-#        with:
-#          token: ${{ secrets.REPO_ACCESS_TOKEN }}
-#          event-type: ${{ inputs.environment }}_deployment_request_event
-#          repository: vjancich/odm-eureka-app
-#          client-payload: '{
-#             "environment": "${{ inputs.environment }}",
-#             "account_name": "${{matrix.customers}}",
-#             "software_version": "${{ steps.deployment_parameters.outputs.software_version }}",
-#             "stack_name": "${{ steps.deployment_parameters.outputs.stack_name}}",
-#             "template_name": "${{ steps.deployment_parameters.outputs.template_name}}"
-#           }'
+      - name: Sending deployment request
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: ${{ inputs.environment }}_deployment_request_event
+          repository: vjancich/odm-eureka-app
+          client-payload: '{
+             "environment": "${{ inputs.environment }}",
+             "account_name": "${{matrix.customers}}",
+             "software_version": "${{ steps.deployment_parameters.outputs.software_version }}",
+             "stack_name": "${{ steps.deployment_parameters.outputs.stack_name}}",
+             "template_name": "${{ steps.deployment_parameters.outputs.template_name}}"
+           }'
