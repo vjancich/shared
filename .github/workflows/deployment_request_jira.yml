@@ -1,0 +1,50 @@
+name: Request to deploy application
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment'
+        type: string
+        required: true
+        default: tst
+      account_name:
+        description: "Name of AWS account for deployment"
+        type: string
+        required: true
+        default: davincicloud-davinciservices
+      software_version:
+        description: "Software version to deploy"
+        type: string
+        required: true
+      stack_name:
+        description: "Stack name of CloudFormation (if not set - project artifactId)"
+        type: string
+        required: false
+      template_name:
+        description: "CloudFormation template name (if not set - project artifactId)"
+        type: string
+        required: false
+      cfg_repo:
+        description: "CloudFormation template name (if not set - project artifactId)"
+        type: string
+        required: false
+      REPOSIOTRY_NAME:
+        description: "Deployment job repository (change if deployment request is in different repository than deployment workflow)"
+        type: string
+        required: false
+    secrets:
+      CICD_GITHUB_WORKFLOW_TOKEN:
+        required: true
+      REPO_ACCESS_TOKEN:
+        required: true
+
+jobs:
+  list-customers:
+    runs-on: ubuntu-latest
+    steps:
+      run: |
+          echo " ${{ inputs.environment }}"
+          echo " ${{ inputs.account_name }}"
+          echo " ${{ inputs.software_version }}"
+          echo " ${{ inputs.stack_name }}"
