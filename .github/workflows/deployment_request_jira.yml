@@ -48,7 +48,7 @@ jobs:
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           event-type: ${{ inputs.environment }}_deployment_request_event
-          repository: vjancich/odm-eureka-app
+          repository: vjancich/ermis-app-java
           client-payload: '{
              "environment": "${{ inputs.environment }}",
              "account_name": "${{ inputs.account_name }}",
