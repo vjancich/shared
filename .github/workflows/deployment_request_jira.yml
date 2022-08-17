@@ -40,14 +40,19 @@ on:
         required: true
 
 jobs:
-  list-customers:
+  send-deployment-request:
     runs-on: ubuntu-latest
     steps:
-      - name: test
-        run: |
-          echo "${{ inputs.environment }}"
-          echo "${{ inputs.account_name }}"
-          echo "${{ inputs.software_version }}"
-          echo "${{ inputs.stack_name }}"
-          
-          echo "koniec"
+      - name: Sending deployment request
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          event-type: ${{ inputs.environment }}_deployment_request_event
+          repository: vjancich/odm-eureka-app
+          client-payload: '{
+             "environment": "${{ inputs.environment }}",
+             "account_name": "${{ inputs.account_name }}",
+             "software_version": "${{ inputs.software_version }}",
+             "stack_name": "${{ inputs.stack_name }}",
+             "template_name": "${{ ermis }}"
+           }'
