@@ -43,7 +43,8 @@ jobs:
   list-customers:
     runs-on: ubuntu-latest
     steps:
-      run: |
+      - name: test
+        run: |
           echo "${{ inputs.environment }}"
           echo "${{ inputs.account_name }}"
           echo "${{ inputs.software_version }}"
