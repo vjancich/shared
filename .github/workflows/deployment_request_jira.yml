@@ -54,5 +54,5 @@ jobs:
              "account_name": "${{ inputs.account_name }}",
              "software_version": "${{ inputs.software_version }}",
              "stack_name": "${{ inputs.stack_name }}",
-             "template_name": "${{ ermis }}"
+             "template_name": "ermis"
            }'
