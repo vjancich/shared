@@ -37,6 +37,9 @@ on:
       JIRA_TOKEN_1808:
         required: true
 
+env:
+  GH_TOKEN: ${{ secrets.JIRA_TOKEN_1808 }}
+
 jobs:
   edit-inputs:
     runs-on: ubuntu-latest
