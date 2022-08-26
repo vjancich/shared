@@ -1,0 +1,182 @@
+name: Request to deploy application from Jira
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment'
+        type: string
+        required: true
+        default: tst
+      account_name:
+        description: "Name of AWS account for deployment"
+        type: string
+        required: true
+        default: davincicloud-davinciservices
+      software_version:
+        description: "Software version to deploy"
+        type: string
+        required: true
+      stack_name:
+        description: "Stack name of CloudFormation (if not set - project artifactId)"
+        type: string
+        required: false
+      template_name:
+        description: "CloudFormation template name (if not set - project artifactId)"
+        type: string
+        required: false
+      jira_issue:
+        description: "Jira issue ID"
+        type: string
+        required: false
+      REPOSITORY_NAME:
+        description: "Deployment job repository (change if deployment request is in different repository than deployment workflow)"
+        type: string
+        required: false
+    secrets:
+      JIRA_TOKEN_1808:
+        required: true
+
+jobs:
+  edit-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - id: bla
+        run: |
+          if [ "${{ inputs.environment }}" == "Test" ];
+            then
+              ENVIRONMENT=tst
+          fi
+          
+          if [ "${{ inputs.account_name }}" == "Davinci services" ];
+            then
+              ACCOUNT_NAME=davincicloud-davinciservices
+          fi
+          
+          if [ "${{ inputs.stack_name }}" == "Ermis" ];
+            then
+              STACK_NAME=ermis
+          fi
+          
+          if [ -z "${{ inputs.REPOSITORY_NAME }}" ]; then
+            echo "::set-output name=repository_name::${{ github.event.repository.name }}"
+          else
+            echo "::set-output name=repository_name::${{ inputs.REPOSITORY_NAME }}"
+          fi
+
+          echo "::set-output name=environment::${ENVIRONMENT}"
+          echo "::set-output name=account_name::${ACCOUNT_NAME}"
+          echo "::set-output name=stack_name::${STACK_NAME}"
+    outputs:
+      environment: ${{ steps.bla.outputs.environment }}
+      account_name: ${{ steps.bla.outputs.account_name }}
+      stack_name: ${{ steps.bla.outputs.stack_name }}
+
+  find_open_pull_requests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find Pull Requests
+        id: search_prs
+        shell: bash
+        run: |          
+          curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.JIRA_TOKEN_1808 }}" 'https://api.github.com/search/issues?q=is:pr+is:open+label:${{ github.event.client_payload.jira-issue }}+user:vjancich' | jq '.total_count' > github_response.json
+          open_prs=$(cat github_response.json | jq '.total_count' | jq '.total_count')
+          printf "Pocet otvorenych PR je: $open_prs \n"
+
+          if [ $open_prs != 0 ];
+            then
+              pr_repo_url=$(cat github_response.json | jq '.items' | jq '.[].repository_url' | sed 's/"//g' | sed 's/"//g' | sed s/"https:\/\/api.github.com\/repos\/"//)
+              pr_repo_url_array=($(echo $pr_repo_url | tr "," "\n"))
+              pr_repo_number=$(cat github_response.json | jq '.items' | jq '.[].number')
+              pr_repo_number_array=($(echo $pr_repo_number | tr "," "\n" ))
+          
+              for i in $(seq 0 $((open_prs-1)));
+                do
+                  declare kombo$i=${pr_repo_url_array[$i]}_${pr_repo_number_array[$i]}
+                  declare -n var3=kombo$i
+                  combination+=($var3)
+                done
+
+              echo "repo0 je: $repo0"
+              echo "repo1 je: $repo1"
+              echo "repo0 cislo je: $reponr0"
+              echo "repo1 cislo je: $reponr1"
+               
+              printf '%s\n' "${combination[@]}" | jq -R . | jq -s -c . > output.json
+              cat output.json
+
+              echo "::set-output name=open_pr_count::${open_prs}"
+          else
+            echo "No open PRs related to this deployment found, skipping directly to CF update..."
+          fi
+      - id: set-matrix
+        if: steps.search_prs.outputs.open_pr_count > 0
+        run: |
+          JSON=$(cat ./output.json)
+          echo "::set-output name=matrix::${JSON//'%'/'%25'}"
+          echo "Output matrix: ${JSON//'%'/'%25'}"
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      open_pr_count: ${{ steps.search_prs.outputs.open_pr_count }}
+#      repo: ${{ steps.search_prs.outputs.pr_repo_url }}
+#      pr_number: ${{ steps.search_prs.outputs.pr_repo_number }}
+#      account_name: ${{ steps.bla.outputs.account_name }}
+#      stack_name: ${{ steps.bla.outputs.stack_name }}
+
+  merge_pull_requests:
+    needs: [find_open_pull_requests]
+    if: needs.find_open_pull_requests.outputs.open_pr_count > 0
+    name: 'Merging PR: ${{ matrix.pr_repo }}'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pr_repo: ${{ fromJson(needs.find_open_pull_requests.outputs.matrix) }}
+    steps:
+      - name: Merge Pull Request
+        id: parse_repo
+        run: |
+          REPO=$(echo ${{ matrix.pr_repo }} | cut -f1 -d"_")
+          PR_NUMBER=$(echo ${{ matrix.pr_repo }} | sed 's/^.*_/_/' | tr -d _)
+          echo $REPO
+          echo $PR_NUMBER
+          echo "::set-output name=repository::${REPO}"
+          echo "::set-output name=pr_number::${PR_NUMBER}"
+      - name: Checkout Configuration repository sources
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ steps.parse_repo.outputs.repository }}
+          token: ${{ secrets.JIRA_TOKEN_1808 }}
+          fetch-depth: 0
+      - name: Merge PR
+        run: |
+          gh pr merge ${{ steps.parse_repo.outputs.pr_number }} -s --delete-branch
+
+  trigger_deployment_workflow:
+    needs: [edit-inputs,merge_pull_requests]
+    if: needs.merge_pull_requests.result == 'success' || needs.merge_pull_requests.result == 'skipped'
+    name: '[${{ needs.edit-inputs.outputs.environment }}] Triggering deployment workflow for: ${{ needs.edit-inputs.outputs.stack_name }}'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deployment summary
+        run: |
+          echo "## Deployment summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Environment: ${{ needs.edit-inputs.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Account name: ${{ needs.edit-inputs.outputs.account_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Software version: ${{ steps.deployment_parameters.outputs.software_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Stack name: ${{ needs.edit-inputs.outputs.stack_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- CloudFormation template name: ${{ needs.edit-inputs.outputs.stack_name }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Sending deployment request
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.JIRA_TOKEN_1808 }}
+          event-type: ${{ needs.edit-inputs.outputs.environment }}_deployment_request_event
+          repository: vjancich/ermis-app-java
+          client-payload: '{
+             "environment": "${{ needs.edit-inputs.outputs.environment }}",
+             "account_name": "${{ needs.edit-inputs.outputs.account_name }}",
+             "software_version": "${{ github.event.client_payload.software_version }}",
+             "stack_name": "${{ needs.edit-inputs.outputs.stack_name }}",
+             "template_name": "${{ needs.edit-inputs.outputs.stack_name }}"
+           }'
