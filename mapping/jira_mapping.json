@@ -1,0 +1,15 @@
+{
+  "Environment": {
+    "Test": "tst",
+    "Acceptance": "acc",
+    "Production": "prd"
+  },
+  "Account":
+  {
+    "Davinci services": "davincicloud-davinciservices"
+  },
+  "Stack name":
+  {
+    "Ermis": "ermis"
+  }
+}
