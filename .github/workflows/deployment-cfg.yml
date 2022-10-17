@@ -57,7 +57,7 @@ env:
   AWS_MAX_ROLE_DURATION_SECONDS: 3600
   SYNC_AUTOMATION_CORE_ROLE_ARN: "arn:aws:iam::288294394121:role/cor-cicd-automation"
   ARTIFACTS_S3_BUCKET: ${{ inputs.PRODUCT_GROUP_NAME }}-artifacts-522044537874
-  CFG_REPO_SUFFIX: cfg
+  APP_REPO_SUFFIX: app-java
   AWS_REGION: 'eu-west-1'
 
 jobs:
@@ -67,21 +67,21 @@ jobs:
 
     steps:
       - name: Identify repo
+        id: repo_modi
         run: |
           echo ${{ github.event.repository.name }}
-#          APPLICATION_NAME=`echo ${{ github.event.repository.name }} | sed 's/-\([a-z]*-java\)//g' | sed 's/-cfg//'`
-#          echo "::set-output name=application_name::${APPLICATION_NAME}"
-#          echo "::set-output name=cfg_repo_name::${APPLICATION_NAME}-${{ env.CFG_REPO_SUFFIX }}"
+          APPLICATION_NAME=`echo odm-eureka-cfg | sed 's/-cfg//'`
+          echo "::set-output name=app_repo_name::${APPLICATION_NAME}-${{ env.APP_REPO_SUFFIX }}"
 
       - name: Checkout sources
         uses: actions/checkout@v3
         with:
-          repository: ${{ inputs.REPOSITORY_NAME || github.repository }}
+          repository: ${{ steps.repo_modi.outputs.app_repo_name }}
       - name: Install xmllint
         run: |
           echo "input repo je ${{ inputs.REPOSITORY_NAME }}"
           echo "github repo je ${{ github.repository }}"
-
+          echo "uprave repo je ${{ steps.repo_modi.outputs.app_repo_name }}"
 #      - name: Prepare maven parameters
 #        id: maven_parameters
 #        run: |
