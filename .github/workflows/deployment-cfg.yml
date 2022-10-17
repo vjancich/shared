@@ -66,6 +66,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Identify repo
+        run: |
+          echo ${{ github.event.repository.name }}
+#          APPLICATION_NAME=`echo ${{ github.event.repository.name }} | sed 's/-\([a-z]*-java\)//g' | sed 's/-cfg//'`
+#          echo "::set-output name=application_name::${APPLICATION_NAME}"
+#          echo "::set-output name=cfg_repo_name::${APPLICATION_NAME}-${{ env.CFG_REPO_SUFFIX }}"
+
       - name: Checkout sources
         uses: actions/checkout@v3
         with:
