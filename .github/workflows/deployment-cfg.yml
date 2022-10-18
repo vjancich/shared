@@ -71,9 +71,9 @@ jobs:
         id: repo_modi
         run: |
           echo ${{ github.event.repository.name }}
-          if grep -q "-${{ env.CFG_REPO_SUFFIX }}$" <<< ${{ github.event.repository.name }};
+          if grep -q "-${{ env.CFG_REPO_SUFFIX }}" <<< ${{ github.event.repository.name }};
             then
-              APPLICATION_NAME=`echo odm-eureka-cfg | sed s/-${{ env.CFG_REPO_SUFFIX }}$//`
+              APPLICATION_NAME=`echo odm-eureka-cfg | sed s/-${{ env.CFG_REPO_SUFFIX }}//`
               echo "::set-output name=app_repo_name::${APPLICATION_NAME}-${{ env.APP_REPO_SUFFIX }}"
             else
               APPLICATION_NAME=${{ github.event.repository.name }}
