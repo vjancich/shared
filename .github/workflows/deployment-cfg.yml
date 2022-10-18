@@ -76,11 +76,14 @@ jobs:
               echo "::set-output name=app_repo_name::${APPLICATION_NAME}-${{ env.APP_REPO_SUFFIX }}"
             else
               APPLICATION_NAME=${{ github.event.repository.name }}
+              echo "::set-output name=app_repo_name::${APPLICATION_NAME}"
           fi
       - name: Checkout sources
         uses: actions/checkout@v3
         with:
           repository: vjancich/${{ steps.repo_modi.outputs.app_repo_name }}
+          ref: main
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
       - name: Install xmllint
         run: |
           echo "input repo je ${{ inputs.REPOSITORY_NAME }}"
