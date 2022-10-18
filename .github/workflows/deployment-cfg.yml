@@ -58,6 +58,7 @@ env:
   SYNC_AUTOMATION_CORE_ROLE_ARN: "arn:aws:iam::288294394121:role/cor-cicd-automation"
   ARTIFACTS_S3_BUCKET: ${{ inputs.PRODUCT_GROUP_NAME }}-artifacts-522044537874
   APP_REPO_SUFFIX: app
+  CFG_REPO_SUFFIX: cfg
   AWS_REGION: 'eu-west-1'
 
 jobs:
@@ -70,14 +71,15 @@ jobs:
         id: repo_modi
         run: |
           echo ${{ github.event.repository.name }}
-          if grep -q "cfg" <<< ${{ github.event.repository.name }};
+          if grep -q "-${{ env.CFG_REPO_SUFFIX }}$" <<< ${{ github.event.repository.name }};
             then
-              APPLICATION_NAME=`echo odm-eureka-cfg | sed 's/-cfg//'`
+              APPLICATION_NAME=`echo odm-eureka-cfg | sed s/-${{ env.CFG_REPO_SUFFIX }}$//`
               echo "::set-output name=app_repo_name::${APPLICATION_NAME}-${{ env.APP_REPO_SUFFIX }}"
             else
               APPLICATION_NAME=${{ github.event.repository.name }}
               echo "::set-output name=app_repo_name::${APPLICATION_NAME}"
           fi
+          echo $APPLICATION_NAME
       - name: Checkout sources
         uses: actions/checkout@v3
         with:
