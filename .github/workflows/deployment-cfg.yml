@@ -83,9 +83,9 @@ jobs:
           echo "account je ${{ inputs.account_name }}"
           echo "software_version je ${{ inputs.software_version }}"
           echo "stack_name je ${{ inputs.stack_name }}"
-          echo "app name je ${{ steps.repo_modi.outputs.application_name }}
-          echo "cfg repo name je ${{ steps.repo_modi.outputs.cfg_repo_name }}
-          echo "app repo name je ${{ steps.repo_modi.outputs.app_repo_name }}
+          echo "app name je ${{ steps.repo_modi.outputs.application_name }}"
+          echo "cfg repo name je ${{ steps.repo_modi.outputs.cfg_repo_name }}"
+          echo "app repo name je ${{ steps.repo_modi.outputs.app_repo_name }}"
 #      - name: Prepare maven parameters
 #        id: maven_parametersP
 #        run: |
