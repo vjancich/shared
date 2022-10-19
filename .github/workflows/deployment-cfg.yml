@@ -66,16 +66,12 @@ jobs:
       - name: Identify repo
         id: repo_modi
         run: |
-          echo ${{ github.event.repository.name }}
-          if [[ ${{ github.event.repository.name }} == *-${{ env.CFG_REPO_SUFFIX }} ]]
-            then
-              APPLICATION_NAME=`echo odm-eureka-cfg | sed s/-${{ env.CFG_REPO_SUFFIX }}//`
-              echo "::set-output name=app_repo_name::${APPLICATION_NAME}-${{ env.APP_REPO_SUFFIX }}"
-            else
-              APPLICATION_NAME=${{ github.event.repository.name }}
-              echo "::set-output name=app_repo_name::${APPLICATION_NAME}"
-          fi
-          echo $APPLICATION_NAME
+          APPLICATION_NAME=`echo ${{ github.event.repository.name }} | sed 's/-\([a-z]*-java\)//g' | sed 's/-cfg//'`
+          APP_REPO_NAME=$APPLICATION_NAME-${{ env.APP_REPO_SUFFIX }}
+          CFG_REPO_NAME=$APPLICATION_NAME-${{ env.CFG_REPO_SUFFIX }}
+          echo "::set-output name=application_name::${APPLICATION_NAME}"
+          echo "::set-output name=cfg_repo_name::${APPLICATION_NAME}-${{ env.CFG_REPO_SUFFIX }}"
+          echo "::set-output name=app_repo_name::${APPLICATION_NAME}-${{ env.APP_REPO_SUFFIX }"
       - name: Checkout sources
         uses: actions/checkout@v3
         with:
@@ -87,6 +83,9 @@ jobs:
           echo "account je ${{ inputs.account_name }}"
           echo "software_version je ${{ inputs.software_version }}"
           echo "stack_name je ${{ inputs.stack_name }}"
+          echo "app name je ${{ steps.repo_modi.outputs.application_name }}
+          echo "cfg repo name je ${{ steps.repo_modi.outputs.cfg_repo_name }}
+          echo "app repo name je ${{ steps.repo_modi.outputs.app_repo_name }}
 #      - name: Prepare maven parameters
 #        id: maven_parametersP
 #        run: |
