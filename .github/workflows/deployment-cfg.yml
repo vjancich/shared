@@ -71,7 +71,7 @@ jobs:
           CFG_REPO_NAME=$APPLICATION_NAME-${{ env.CFG_REPO_SUFFIX }}
           echo "::set-output name=application_name::${APPLICATION_NAME}"
           echo "::set-output name=cfg_repo_name::${APPLICATION_NAME}-${{ env.CFG_REPO_SUFFIX }}"
-          echo "::set-output name=app_repo_name::${APPLICATION_NAME}-${{ env.APP_REPO_SUFFIX }"
+          echo "::set-output name=app_repo_name::${APPLICATION_NAME}-${{ env.APP_REPO_SUFFIX }}"
       - name: Checkout sources
         uses: actions/checkout@v3
         with:
