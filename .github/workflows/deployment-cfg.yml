@@ -41,10 +41,6 @@ on:
         description: 'Service name, understood as a set of components with the same lifecycle'
         type: string
         required: false
-      REPOSITORY_NAME:
-        description: "Deployment job repository (change if deployment request is in different repository than deployment workflow)"
-        type: string
-        required: false
     secrets:
       DEPLOY_GITHUB_TOKEN:
         required: true
@@ -86,13 +82,13 @@ jobs:
           repository: vjancich/${{ steps.repo_modi.outputs.app_repo_name }}
           ref: main
           token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
-      - name: Install xmllint
+      - name: Vypis
         run: |
-          echo "input repo je ${{ inputs.REPOSITORY_NAME }}"
-          echo "github repo je ${{ github.repository }}"
-          echo "uprave repo je ${{ steps.repo_modi.outputs.app_repo_name }}"
+          echo "account je ${{ inputs.account_name }}"
+          echo "software_version je ${{ inputs.software_version }}"
+          echo "stack_name je ${{ inputs.stack_name }}"
 #      - name: Prepare maven parameters
-#        id: maven_parameters
+#        id: maven_parametersP
 #        run: |
 #          INPUT_VERSION="${{ inputs.software_version }}"
 #          INPUT_STACK_NAME="${{ inputs.stack_name }}"
