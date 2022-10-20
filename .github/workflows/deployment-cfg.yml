@@ -85,6 +85,7 @@ jobs:
             echo "Read deployment config from: $DEPLOYMENT_CONFIG_FILE"
             . $DEPLOYMENT_CONFIG_FILE
             software_version=$(cat $DEPLOYMENT_CONFIG_FILE | grep Version | tr -d 'Version=' )
+            echo $software_version
             if [ -z "$software_version" ]; then
               $software_version=${{ inputs.software_version }}
               echo "::set-output name=SwVersion::$software_version"
