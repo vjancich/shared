@@ -66,12 +66,34 @@ jobs:
       - name: Identify repo
         id: repo_modi
         run: |
-          APPLICATION_NAME=`echo ${{ github.event.repository.name }} | sed 's/-\([a-z]*-java\)//g' | sed 's/-cfg//'`
-          APP_REPO_NAME=$APPLICATION_NAME-${{ env.APP_REPO_SUFFIX }}
-          CFG_REPO_NAME=$APPLICATION_NAME-${{ env.CFG_REPO_SUFFIX }}
+          APPLICATION_NAME=`echo ${{ github.event.repository.name }} | sed 's/-\([a-z]*-java\)//g' | sed 's/-${{ env.CFG_REPO_SUFFIX }}//'`
           echo "::set-output name=application_name::${APPLICATION_NAME}"
           echo "::set-output name=cfg_repo_name::${APPLICATION_NAME}-${{ env.CFG_REPO_SUFFIX }}"
           echo "::set-output name=app_repo_name::${APPLICATION_NAME}-${{ env.APP_REPO_SUFFIX }}"
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          repository: vjancich/${{ steps.repo_modi.outputs.cfg_repo_name }}
+          ref: ${{ inputs.environment }}
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+      - name: Get version
+        id: get_version
+        run: |
+          # override input / default values with values in deployment.conf if exists
+          DEPLOYMENT_CONFIG_FILE=cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deployment.conf
+          if [ -f "$DEPLOYMENT_CONFIG_FILE" ]; then
+            echo "Read deployment config from: $DEPLOYMENT_CONFIG_FILE"
+            . $DEPLOYMENT_CONFIG_FILE
+            software_version=$(cat $DEPLOYMENT_CONFIG_FILE | grep Version | tr -d 'Version=' )
+            if [ -z "$software_version" ]; then
+              $software_version=${{ inputs.software_version }}
+              echo "::set-output name=SwVersion::$software_version"
+            else
+              echo "Software version found in deployment.conf file, use cfg repo for deployment."
+              exit 1
+            fi
+          fi
+
       - name: Checkout sources
         uses: actions/checkout@v3
         with:
@@ -81,7 +103,7 @@ jobs:
       - name: Vypis
         run: |
           echo "account je ${{ inputs.account_name }}"
-          echo "software_version je ${{ inputs.software_version }}"
+          echo "software_version je ${{ inputs.software_version || steps.get_version.outputs.SwVersion }}"
           echo "stack_name je ${{ inputs.stack_name }}"
           echo "app name je ${{ steps.repo_modi.outputs.application_name }}"
           echo "cfg repo name je ${{ steps.repo_modi.outputs.cfg_repo_name }}"
