@@ -84,21 +84,29 @@ jobs:
           if [ -f "$DEPLOYMENT_CONFIG_FILE" ]; then
             echo "Read deployment config from: $DEPLOYMENT_CONFIG_FILE"
             . $DEPLOYMENT_CONFIG_FILE
-            version=$(cat $DEPLOYMENT_CONFIG_FILE | grep Version | tr -d 'Version=' )
+          fi
 
-            if [ -z "$version" && ] && [ -z ${{ inputs.software_version }} ]; then
-              echo "No version found"
-              exit 1
-            elif [ -z "$version" && ] && [ -n ${{ inputs.software_version }} ]; then
-              software_version=${{ inputs.software_version }}
-            elif [ -n "$version" && ] && [ -z ${{ inputs.software_version }} ]; then
-              software_version=$version
+          # resolve service version: should be defined either in config or input (not both), no version (meaning latest) is ok for dev or tst only
+          if [ -z "${{ inputs.software_version }}" ] && [ -z "$ServiceVersion" ]; then
+            if [ "${{ inputs.environment }}" == "dev" ] || [ "${{ inputs.environment }}" == "tst" ]; then
+              ServiceVersion=${{ steps.maven_parameters.outputs.software_version }}
             else
-              echo "Software version found in deployment.conf file, use cfg repo for deployment."
-              exit 1
+              echo "Deployment from branch, resp. latest snapshot deployment, can be done only for dev or test stage"
+              exit -1;
+            fi
+          else
+            if [ "${{ inputs.software_version }}" ] && [ "$ServiceVersion" ]; then
+              echo "Both ServiceVersion is defined in deployment.conf and software_version set in workflow input, choose one"
+              exit -1;
+            fi
+            if [ -z "$ServiceVersion" ]; then
+              ServiceVersion=${{ inputs.software_version }}
             fi
           fi
-          echo "::set-output name=software_version::$software_version"
+
+          echo "::set-output name=Domain::$Domain"
+          echo "::set-output name=Service::$Service"
+          echo "::set-output name=ServiceVersion::$ServiceVersion"
 
       - name: Checkout sources
         uses: actions/checkout@v3
@@ -109,7 +117,7 @@ jobs:
       - name: Vypis
         run: |
           echo "account je ${{ inputs.account_name }}"
-          echo "software_version je ${{ inputs.software_version || steps.get_version.outputs.software_version }}"
+          echo "software_version je ${{ steps.get_version.outputs.ServiceVersion }}"
           echo "stack_name je ${{ inputs.stack_name }}"
           echo "app name je ${{ steps.repo_modi.outputs.application_name }}"
           echo "cfg repo name je ${{ steps.repo_modi.outputs.cfg_repo_name }}"
