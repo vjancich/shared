@@ -84,16 +84,21 @@ jobs:
           if [ -f "$DEPLOYMENT_CONFIG_FILE" ]; then
             echo "Read deployment config from: $DEPLOYMENT_CONFIG_FILE"
             . $DEPLOYMENT_CONFIG_FILE
-            software_version=$(cat $DEPLOYMENT_CONFIG_FILE | grep Version | tr -d 'Version=' )
-            echo $software_version
-            if [ -z "$software_version" ]; then
-              $software_version=${{ inputs.software_version }}
-              echo "::set-output name=SwVersion::$software_version"
+            version=$(cat $DEPLOYMENT_CONFIG_FILE | grep Version | tr -d 'Version=' )
+
+            if [ -z "$version" && ] && [ -z ${{ inputs.software_version }} ]; then
+              echo "No version found"
+              exit 1
+            elif [ -z "$version" && ] && [ -n ${{ inputs.software_version }} ]; then
+              software_version=${{ inputs.software_version }}
+            elif [ -n "$version" && ] && [ -z ${{ inputs.software_version }} ]; then
+              software_version=$version
             else
               echo "Software version found in deployment.conf file, use cfg repo for deployment."
               exit 1
             fi
           fi
+          echo "::set-output name=software_version::$software_version"
 
       - name: Checkout sources
         uses: actions/checkout@v3
@@ -104,7 +109,7 @@ jobs:
       - name: Vypis
         run: |
           echo "account je ${{ inputs.account_name }}"
-          echo "software_version je ${{ inputs.software_version || steps.get_version.outputs.SwVersion }}"
+          echo "software_version je ${{ inputs.software_version || steps.get_version.outputs.software_version }}"
           echo "stack_name je ${{ inputs.stack_name }}"
           echo "app name je ${{ steps.repo_modi.outputs.application_name }}"
           echo "cfg repo name je ${{ steps.repo_modi.outputs.cfg_repo_name }}"
