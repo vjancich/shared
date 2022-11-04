@@ -63,10 +63,6 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
-        with:
-          repository: vjancich/${{ github.event.repository.name }}
-          ref: ${{ inputs.environment }}
-          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
       - name: Login
         uses: atlassian/gajira-login@v2.0.0
         env:
