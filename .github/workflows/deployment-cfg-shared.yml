@@ -1,0 +1,127 @@
+name: Trigger deployment
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment'
+        type: string
+        required: true
+        default: tst
+      PRODUCT_GROUP_NAME:
+        description: 'Product group name'
+        type: string
+        required: true
+    secrets:
+      JIRA_TOKEN:
+        required: true
+      DEPLOY_GITHUB_TOKEN:
+        required: true
+
+jobs:
+  prepare-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          repository: vjancich/${{ github.event.repository.name }}
+          ref: ${{ inputs.environment }}
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+      - name: get-changes
+        id: get-changes
+        run: |
+          paths=$(git diff-tree --no-commit-id --name-only -r ${{ github.event.before }} ${{ github.event.after }} | grep deployment.conf)
+          matrix="{\"definition\":[]}"
+          for file in $(echo $paths); do
+              account_name=$(echo $file | cut -d "/" -f2)
+              stack_name=$(echo $file | cut -d "/" -f3)
+              # strange formatting because of GH parsing error
+              definition=$(cat << JSON
+              {
+                "accountName": "$account_name",
+                "stackName": "$stack_name"
+              }
+          JSON
+          )
+            echo "Definition: $definition"
+            definition=$(echo $definition | sed -r 's/( )+//g')
+            matrix=$( echo $matrix | jq -c --argjson definition "$definition" '.definition += [$definition]')
+          done
+          if [[ $( echo $matrix | jq '.definition | has(0)' ) == "true" ]]; then
+            echo "Definition to run: $matrix"
+            echo "matrix=$matrix" >> $GITHUB_OUTPUT
+          else
+            echo "No definitions to run"
+            echo "matrix=none" >> $GITHUB_OUTPUT
+          fi
+    outputs:
+      matrix: ${{ steps.get-changes.outputs.matrix }}
+
+  link-to-jira:
+    needs: [prepare-inputs]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+        with:
+          repository: vjancich/${{ github.event.repository.name }}
+          ref: ${{ inputs.environment }}
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+      - name: Login
+        uses: atlassian/gajira-login@v2.0.0
+        env:
+          JIRA_BASE_URL: https://vladys.atlassian.net
+          JIRA_USER_EMAIL: valdo564@azet.sk
+          JIRA_API_TOKEN: ${{ secrets.JIRA_TOKEN }}
+      - name: Find Jira issue in commit messages
+        id: find_jira_issue
+        uses: atlassian/gajira-find-issue-key@master
+        with:
+          from: commits
+      - name: Change Jira status
+        run: |
+          echo "Ticket je ${{ steps.find_jira_issue.outputs.issue }}"
+          if [[ ${{ steps.find_jira_issue.outputs.issue }} == CCDESK* ]];
+            then
+              transition_id=1
+          elif [[ ${{ steps.find_jira_issue.outputs.issue }} == VLAD* ]];
+            then
+              transition_id=31
+          fi
+          echo "transition id je $transition_id"
+          
+          curl --request POST \
+          --url 'https://vladys.atlassian.net/rest/api/3/issue/${{ steps.find_jira_issue.outputs.issue }}/transitions' \
+          --user 'valdo564@azet.sk:${{ secrets.JIRA_TOKEN }}' \
+          --header 'Accept: application/json' \
+          --header 'Content-Type: application/json' \
+          --data '{
+            "transition": {
+              "id": "'$transition_id'"
+              }
+            }' -o jira_output.log
+          if [ -s jira_output.log ]
+            then
+              echo "Jira status not changed, check error message"
+              cat jira_output.log
+              exit 1
+            else
+              echo "Jira status changed successfully"
+          fi
+
+  deploy:
+    needs: [prepare-inputs]
+    if: needs.prepare-inputs.outputs.matrix != 'none'
+    name: 'Starting deployment for: ${{ matrix.definition.accountName }}/${{ matrix.definition.stackName }}'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare-inputs.outputs.matrix) }}
+    uses: vjancich/shared/.github/workflows/deployment-cfg.yml@main
+    with:
+      environment: ${{ inputs.environment }}
+      account_name: ${{ matrix.definition.accountName }}
+      stack_name: ${{ matrix.definition.stackName }}
+      PRODUCT_GROUP_NAME: ${{ inputs.PRODUCT_GROUP_NAME }}
+    secrets: inherit
