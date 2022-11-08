@@ -192,7 +192,10 @@ jobs:
 
   deploy:
     needs: [prepare-inputs,merge_pull_requests]
-    if: needs.prepare-inputs.outputs.matrix != 'none' && ( needs.merge_pull_requests.result == 'success' || needs.merge_pull_requests.result == 'skipped' )
+    if: |
+      always() && 
+      needs.prepare-inputs.outputs.matrix != 'none' && 
+      ( needs.merge_pull_requests.result == 'success' || needs.merge_pull_requests.result == 'skipped' )
     name: 'Starting deployment for: ${{ matrix.definition.accountName }}/${{ matrix.definition.stackName }}'
     strategy:
       fail-fast: false
