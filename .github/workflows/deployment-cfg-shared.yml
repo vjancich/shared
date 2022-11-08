@@ -191,8 +191,8 @@ jobs:
           gh pr merge ${{ steps.parse_repo.outputs.pr_number }} -s --delete-branch
 
   deploy:
-    needs: [prepare-inputs,find_open_pull_requests]
-    if: needs.prepare-inputs.outputs.matrix != 'none'
+    needs: [prepare-inputs,merge_pull_requests]
+    if: needs.prepare-inputs.outputs.matrix != 'none' && ( needs.merge_pull_requests.result == 'success' || needs.merge_pull_requests.result == 'skipped' )
     name: 'Starting deployment for: ${{ matrix.definition.accountName }}/${{ matrix.definition.stackName }}'
     strategy:
       fail-fast: false
