@@ -114,6 +114,7 @@ jobs:
           fi
 
   find_open_pull_requests:
+    needs: link-to-jira
     runs-on: ubuntu-latest
     steps:
       - name: Find Pull Requests
