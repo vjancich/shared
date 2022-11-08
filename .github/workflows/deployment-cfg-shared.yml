@@ -12,11 +12,20 @@ on:
         description: 'Product group name'
         type: string
         required: true
+      JIRA_ISSUE:
+        description: 'Jira issue'
+        type: string
+        required: false
     secrets:
       JIRA_TOKEN:
         required: true
       DEPLOY_GITHUB_TOKEN:
         required: true
+      JIRA_TOKEN_1808:
+        required: true
+
+env:
+  GH_TOKEN: ${{ secrets.JIRA_TOKEN_1808 }}
 
 jobs:
   prepare-inputs:
@@ -104,6 +113,83 @@ jobs:
             else
               echo "Jira status changed successfully"
           fi
+
+  find_open_pull_requests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find Pull Requests
+        id: search_prs
+        shell: bash
+        run: |          
+          curl -H "Accept: application/vnd.github+json" \
+          -H "Authorization: token ${{ secrets.JIRA_TOKEN_1808 }}" \
+          'https://api.github.com/search/issues?q=is:pr+is:open+label:${{ inputs.JIRA_ISSUE }}+user:vjancich' > github_response.json
+          open_prs=$(cat github_response.json | jq '.total_count')
+          printf "Opened PRs count: $open_prs \n"
+
+          if [ $open_prs != 0 ];
+            then
+              pr_repo_url=$(cat github_response.json | jq '.items' | jq '.[].repository_url' | sed 's/"//g' | sed 's/"//g' | sed s/"https:\/\/api.github.com\/repos\/"//)
+              pr_repo_url_array=($(echo $pr_repo_url | tr "," "\n"))
+              pr_repo_number=$(cat github_response.json | jq '.items' | jq '.[].number')
+              pr_repo_number_array=($(echo $pr_repo_number | tr "," "\n" ))
+          
+              for i in $(seq 0 $((open_prs-1)));
+                do
+                  declare kombo$i=${pr_repo_url_array[$i]}_${pr_repo_number_array[$i]}
+                  declare -n var3=kombo$i
+                  combination+=($var3)
+                done
+              echo "repo0 je: $repo0"
+              echo "repo1 je: $repo1"
+              echo "repo0 cislo je: $reponr0"
+              echo "repo1 cislo je: $reponr1"
+               
+              printf '%s\n' "${combination[@]}" | jq -R . | jq -s -c . > output.json
+              cat output.json
+              echo "::set-output name=open_pr_count::${open_prs}"
+          else
+            echo "No open PRs related to this deployment found, skipping directly to CF update..."
+          fi
+      - id: set-matrix
+        if: steps.search_prs.outputs.open_pr_count > 0
+        run: |
+          JSON=$(cat ./output.json)
+          echo "::set-output name=matrix::${JSON//'%'/'%25'}"
+          echo "Output matrix: ${JSON//'%'/'%25'}"
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      open_pr_count: ${{ steps.search_prs.outputs.open_pr_count }}
+
+  merge_pull_requests:
+    needs: [find_open_pull_requests]
+    #if: needs.find_open_pull_requests.result == 'success' && needs.find_open_pull_requests.outputs.open_pr_count > 0
+    if: needs.find_open_pull_requests.outputs.open_pr_count > 0
+    name: 'Merging PR: ${{ matrix.pr_repo }}'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pr_repo: ${{ fromJson(needs.find_open_pull_requests.outputs.matrix) }}
+    steps:
+      - name: Merge Pull Request
+        id: parse_repo
+        run: |
+          REPO=$(echo ${{ matrix.pr_repo }} | cut -f1 -d"_")
+          PR_NUMBER=$(echo ${{ matrix.pr_repo }} | sed 's/^.*_/_/' | tr -d _)
+          echo $REPO
+          echo $PR_NUMBER
+          echo "::set-output name=repository::${REPO}"
+          echo "::set-output name=pr_number::${PR_NUMBER}"
+      - name: Checkout Configuration repository sources
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ steps.parse_repo.outputs.repository }}
+          token: ${{ secrets.JIRA_TOKEN_1808 }}
+          fetch-depth: 0
+      - name: Merge PR
+        run: |
+          gh pr merge ${{ steps.parse_repo.outputs.pr_number }} -s --delete-branch
 
   deploy:
     needs: [prepare-inputs]
