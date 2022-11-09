@@ -126,13 +126,13 @@ jobs:
           open_prs=$(cat github_response.json | jq '.total_count')
           printf "Opened PRs count: $open_prs \n"
           repos=$(cat github_response.json | jq ".items | .[] | select(.repository_url | contains(\"${{ inputs.PRODUCT_GROUP_NAME }}\")) | .repository_url" | sed 's/"//g' | sed s/"https:\/\/api.github.com\/repos\/"//)
-          matrix2="{\"definition2\":[]}"
+          matrix="{\"definition\":[]}"
           
           for file in $(echo $repos); do
             repo_name=$(echo $file)
             pr_number=$(cat github_response.json | jq ".items | .[] | select(.repository_url | contains(\"${{ inputs.PRODUCT_GROUP_NAME }}\")) | .number")
             # strange formatting because of GH parsing error
-            definition2=$(cat << JSON
+            definition=$(cat << JSON
             {
               "repoName": "$repo_name",
               "prNumber": "$pr_number"
@@ -140,34 +140,34 @@ jobs:
           JSON
           )
           
-            echo "Definition: $definition2"
-            definition2=$(echo $definition2 | sed -r 's/( )+//g')
-            matrix2=$( echo $matrix2 | jq -c --argjson definition2 "$definition2" '.definition2 += [$definition2]')
+            echo "Definition: $definition"
+            definition=$(echo $definitio | sed -r 's/( )+//g')
+            matrix=$( echo $matrix | jq -c --argjson definition "$definition" '.definition += [$definition]')
           done
-          if [[ $( echo $matrix2 | jq '.definition2 | has(0)' ) == "true" ]]; then
-            echo "Definition to run: $matrix2"
-            echo "matrix2=$matrix2" >> $GITHUB_OUTPUT
+          if [[ $( echo $matrix | jq '.definition | has(0)' ) == "true" ]]; then
+            echo "Definition to run: $matrix"
+            echo "matrix=$matrix" >> $GITHUB_OUTPUT
           else
             echo "No definitions to run"
-            echo "matrix2=none" >> $GITHUB_OUTPUT
+            echo "matrix=none" >> $GITHUB_OUTPUT
           fi
     outputs:
-      matrix2: ${{ steps.search_prs.outputs.matrix2 }}
+      matrix: ${{ steps.search_prs.outputs.matrix }}
 
   merge_pull_requests:
     needs: [find_open_pull_requests]
-    if: needs.find_open_pull_requests.outputs.matrix2 != 'none'
-    name: 'Merging PR: ${{ matrix2.definition2.repoName }}/${{ matrix2.definition2.prNumber }}'
+    if: needs.find_open_pull_requests.outputs.matrix != 'none'
+    name: 'Merging PR: ${{ matrix.definition.repoName }}/${{ matrix.definition.prNumber }}'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.find_open_pull_requests.outputs.matrix2) }}
+      matrix: ${{ fromJson(needs.find_open_pull_requests.outputs.matrix) }}
     steps:
       - name: Merge Pull Request
         id: parse_repo
         run: |
-          REPO=${{ matrix2.definition2.repoName }}
-          PR_NUMBER=${{ matrix2.definition2.prNumber }}
+          REPO=${{ matrix.definition.repoName }}
+          PR_NUMBER=${{ matrix.definition.prNumber }}
           echo $REPO
           echo $PR_NUMBER
           echo "::set-output name=repository::${REPO}"
