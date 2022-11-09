@@ -141,10 +141,10 @@ jobs:
           )
           
             echo "Definition: $definition2"
-            definition=$(echo $definition2 | sed -r 's/( )+//g')
-            matrix2=$( echo $matrix2 | jq -c --argjson definition "$definition2" '.definition += [$definition2]')
+            definition2=$(echo $definition2 | sed -r 's/( )+//g')
+            matrix2=$( echo $matrix2 | jq -c --argjson definition2 "$definition2" '.definition2 += [$definition2]')
           done
-          if [[ $( echo $matrix2 | jq '.definition | has(0)' ) == "true" ]]; then
+          if [[ $( echo $matrix2 | jq '.definition2 | has(0)' ) == "true" ]]; then
             echo "Definition to run: $matrix2"
             echo "matrix2=$matrix2" >> $GITHUB_OUTPUT
           else
