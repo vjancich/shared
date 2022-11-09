@@ -128,12 +128,13 @@ jobs:
 
           if [ $open_prs != 0 ];
             then
-              pr_repo_url=$(cat github_response.json | jq '.items' | jq '.[].repository_url' | sed 's/"//g' | sed 's/"//g' | sed s/"https:\/\/api.github.com\/repos\/"//)
+              pr_repo_url=$(cat github_response.json | jq ".items | .[] | select(.repository_url | contains(\"${{ inputs.PRODUCT_GROUP_NAME }}\")) | .repository_url" | sed 's/"//g' | sed s/"https:\/\/api.github.com\/repos\/"//)
               pr_repo_url_array=($(echo $pr_repo_url | tr "," "\n"))
-              pr_repo_number=$(cat github_response.json | jq '.items' | jq '.[].number')
+              array_length="${#pr_repo_url_array[@]}"
+              pr_repo_number=$( cat github_response.json | jq ".items | .[] | select(.repository_url | contains(\"${{ inputs.PRODUCT_GROUP_NAME }}\")) | .number")
               pr_repo_number_array=($(echo $pr_repo_number | tr "," "\n" ))
           
-              for i in $(seq 0 $((open_prs-1)));
+              for i in $(seq 0 $((array_length-1)));
                 do
                   declare kombo$i=${pr_repo_url_array[$i]}_${pr_repo_number_array[$i]}
                   declare -n var3=kombo$i
