@@ -125,58 +125,49 @@ jobs:
           'https://api.github.com/search/issues?q=is:pr+is:open+label:${{ needs.link-to-jira.outputs.jiraIssue }}+user:vjancich' > github_response.json
           open_prs=$(cat github_response.json | jq '.total_count')
           printf "Opened PRs count: $open_prs \n"
-
-          if [ $open_prs != 0 ];
-            then
-              pr_repo_url=$(cat github_response.json | jq ".items | .[] | select(.repository_url | contains(\"${{ inputs.PRODUCT_GROUP_NAME }}\")) | .repository_url" | sed 's/"//g' | sed s/"https:\/\/api.github.com\/repos\/"//)
-              pr_repo_url_array=($(echo $pr_repo_url | tr "," "\n"))
-              array_length="${#pr_repo_url_array[@]}"
-              pr_repo_number=$( cat github_response.json | jq ".items | .[] | select(.repository_url | contains(\"${{ inputs.PRODUCT_GROUP_NAME }}\")) | .number")
-              pr_repo_number_array=($(echo $pr_repo_number | tr "," "\n" ))
+          repos=$(cat github_response.json | jq ".items | .[] | select(.repository_url | contains(\"${{ inputs.PRODUCT_GROUP_NAME }}\")) | .repository_url" | sed 's/"//g' | sed s/"https:\/\/api.github.com\/repos\/"//)
+          matrix2="{\"definition2\":[]}"
           
-              for i in $(seq 0 $((array_length-1)));
-                do
-                  declare kombo$i=${pr_repo_url_array[$i]}_${pr_repo_number_array[$i]}
-                  declare -n var3=kombo$i
-                  combination+=($var3)
-                done
-              echo "repo0 je: $repo0"
-              echo "repo1 je: $repo1"
-              echo "repo0 cislo je: $reponr0"
-              echo "repo1 cislo je: $reponr1"
-               
-              printf '%s\n' "${combination[@]}" | jq -R . | jq -s -c . > output.json
-              cat output.json
-              echo "::set-output name=open_pr_count::${open_prs}"
+          for file in $(echo $repos); do
+            repo_name=$(echo $file)
+            pr_number=$(cat github_response.json | jq ".items | .[] | select(.repository_url | contains(\"${{ inputs.PRODUCT_GROUP_NAME }}\")) | .number")
+            # strange formatting because of GH parsing error
+            definition2=$(cat << JSON
+            {
+              "repoName": "$repo_name",
+              "prNumber": "$pr_number"
+            }
+          JSON
+          )
+          
+            echo "Definition: $definition2"
+            definition=$(echo $definition2 | sed -r 's/( )+//g')
+            matrix2=$( echo $matrix2 | jq -c --argjson definition "$definition2" '.definition += [$definition2]')
+          done
+          if [[ $( echo $matrix | jq '.definition | has(0)' ) == "true" ]]; then
+            echo "Definition to run: $matrix2"
+            echo "matrix2=$matrix2" >> $GITHUB_OUTPUT
           else
-            echo "No open PRs related to this deployment found, skipping directly to CF update..."
+            echo "No definitions to run"
+            echo "matrix2=none" >> $GITHUB_OUTPUT
           fi
-      - id: set-matrix
-        if: steps.search_prs.outputs.open_pr_count > 0
-        run: |
-          JSON=$(cat ./output.json)
-          echo "::set-output name=matrix::${JSON//'%'/'%25'}"
-          echo "Output matrix: ${JSON//'%'/'%25'}"
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-      open_pr_count: ${{ steps.search_prs.outputs.open_pr_count }}
+      matrix: ${{ steps.get-changes.outputs.matrix2 }}
 
   merge_pull_requests:
     needs: [find_open_pull_requests]
-    #if: needs.find_open_pull_requests.result == 'success' && needs.find_open_pull_requests.outputs.open_pr_count > 0
-    if: needs.find_open_pull_requests.outputs.open_pr_count > 0
-    name: 'Merging PR: ${{ matrix.pr_repo }}'
+    if: needs.find_open_pull_requests.outputs.matrix2 != 'none'
+    name: 'Merging PR: ${{ matrix2.definition2.repoName }}/${{ matrix2.definition2.prNumber }}'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        pr_repo: ${{ fromJson(needs.find_open_pull_requests.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.find_open_pull_requests.outputs.matrix2) }}
     steps:
       - name: Merge Pull Request
         id: parse_repo
         run: |
-          REPO=$(echo ${{ matrix.pr_repo }} | cut -f1 -d"_")
-          PR_NUMBER=$(echo ${{ matrix.pr_repo }} | sed 's/^.*_/_/' | tr -d _)
+          REPO=${{ matrix2.definition2.repoName }}
+          PR_NUMBER=${{ matrix2.definition2.prNumber }}
           echo $REPO
           echo $PR_NUMBER
           echo "::set-output name=repository::${REPO}"
