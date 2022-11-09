@@ -141,7 +141,7 @@ jobs:
           )
           
             echo "Definition: $definition"
-            definition=$(echo $definitio | sed -r 's/( )+//g')
+            definition=$(echo $definition | sed -r 's/( )+//g')
             matrix=$( echo $matrix | jq -c --argjson definition "$definition" '.definition += [$definition]')
           done
           if [[ $( echo $matrix | jq '.definition | has(0)' ) == "true" ]]; then
