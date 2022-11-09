@@ -129,8 +129,8 @@ jobs:
           matrix="{\"definition\":[]}"
           
           for file in $(echo $repos); do
-            repo_name=$(echo $file)
-            pr_number=$(cat github_response.json | jq ".items | .[] | select(.repository_url | contains(\"app\")) | .number")
+            repo_name=$file
+            pr_number=$(cat github_response.json | jq ".items | .[] | select(.repository_url | contains(\"$repo_name\")) | .number")
             # strange formatting because of GH parsing error
             definition=$(cat << JSON
             {
