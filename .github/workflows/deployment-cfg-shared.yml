@@ -152,7 +152,7 @@ jobs:
             echo "matrix2=none" >> $GITHUB_OUTPUT
           fi
     outputs:
-      matrix2: ${{ steps.get-changes.outputs.matrix2 }}
+      matrix2: ${{ steps.search_prs.outputs.matrix2 }}
 
   merge_pull_requests:
     needs: [find_open_pull_requests]
