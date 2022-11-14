@@ -179,6 +179,7 @@ jobs:
       - name: approval
         uses: trstringer/manual-approval@v1.8.0
         with:
+          secret: ${{ secrets.JIRA_TOKEN_1808 }}
           approvers: vjancich
           minimum-approvals: 1
           issue-title: "wut???"
@@ -205,7 +206,7 @@ jobs:
 #        uses: actions/checkout@v3
 #        with:
 #          repository: ${{ steps.parse_repo.outputs.repository }}
-#          token: ${{ secrets.JIRA_TOKEN_1808 }}
+#          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
 #          fetch-depth: 0
 #      - name: Merge PR
 #        run: |
