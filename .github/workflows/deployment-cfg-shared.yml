@@ -167,34 +167,13 @@ jobs:
           'https://api.github.com/search/issues?q=is:pr+is:open+label:${{ needs.link-to-jira.outputs.jiraIssue }}+user:vjancich' > github_response.json
           open_prs=$(cat github_response.json | jq '.total_count')
           printf "Opened PRs count: $open_prs \n"
-          repos=$(cat github_response.json | jq '.items'  | jq '.[].repository_url' | sed 's/"//g')
-          matrix="{\"definition\":[]}"
           
-          for file in $(echo $repos); do
-            repo_name=$file
-            pr_number=$(cat github_response.json | jq '.items' | jq '.[].number')
-            # strange formatting because of GH parsing error
-            definition=$(cat << JSON
-            {
-              "repoName": "$repo_name",
-              "prNumber": "$pr_number"
-            }
-          JSON
-          )
-          
-            echo "Definition: $definition"
-            definition=$(echo $definition | sed -r 's/( )+//g')
-            matrix=$( echo $matrix | jq -c --argjson definition "$definition" '.definition += [$definition]')
-          done
-          if [[ $( echo $matrix | jq '.definition | has(0)' ) == "true" ]]; then
-            echo "Definition to run: $matrix"
-            echo "matrix=$matrix" >> $GITHUB_OUTPUT
-          else
-            echo "No definitions to run"
-            echo "matrix=none" >> $GITHUB_OUTPUT
-          fi
-    outputs:
-      matrix: ${{ steps.search_prs.outputs.matrix }}
+          if [ $open_prs != 0 ];
+            then
+              repos=$(cat github_response.json | jq '.items'  | jq '.[].html_url' | sed 's/"//g')
+
+          repos=$(cat github_response.json | jq '.items'  | jq '.[].html_url' | sed 's/"//g')
+          echo "nasiel som tieto otvorene PR: $repos"
 
 #  merge_pull_requests:
 #    needs: [find_open_pull_requests]
@@ -224,32 +203,12 @@ jobs:
 #        run: |
 #          gh pr merge ${{ steps.parse_repo.outputs.pr_number }} -s --delete-branch
 
-  merge_pull_requests2:
-    needs: [find_open_pull_requests2]
-    if: needs.find_open_pull_requests2.outputs.matrix != 'none'
-    name: 'Merging PR: ${{ matrix.definition.repoName }}/${{ matrix.definition.prNumber }}'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.find_open_pull_requests2.outputs.matrix) }}
-    steps:
-      - name: List Pull Requests
-        id: parse_repo
-        run: |
-          REPO=${{ matrix.definition.repoName }}
-          PR_NUMBER=${{ matrix.definition.prNumber }}
-          echo $REPO
-          echo $PR_NUMBER
-          echo "::set-output name=repository::${REPO}"
-          echo "::set-output name=pr_number::${PR_NUMBER}"
-          echo "nasiel som otvorený PR $REPO/pull/$PR_NUMBER"
-
   deploy:
-    needs: [prepare-inputs,merge_pull_requests2]
+    needs: [prepare-inputs,find_open_pull_requests2]
     if: |
       always() && 
       needs.prepare-inputs.outputs.matrix != 'none' && 
-      ( needs.merge_pull_requests2.result == 'success' || needs.merge_pull_requests2.result == 'skipped' )
+      ( needs.find_open_pull_requests2.result == 'success' || needs.find_open_pull_requests2.result == 'skipped' )
     name: 'Starting deployment for: ${{ matrix.definition.accountName }}/${{ matrix.definition.stackName }}'
     strategy:
       fail-fast: false
