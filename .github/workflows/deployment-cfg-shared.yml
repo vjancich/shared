@@ -176,13 +176,6 @@ jobs:
             echo "No open PRs found"
           fi
           echo -e "- PRs found: \n$repos" >> $GITHUB_STEP_SUMMARY
-      - name: approval
-        uses: trstringer/manual-approval@v1.8.0
-        with:
-          secret: ${{ secrets.JIRA_TOKEN_1808 }}
-          approvers: vjancich
-          minimum-approvals: 1
-          issue-title: "wut???"
 
 #  merge_pull_requests:
 #    needs: [find_open_pull_requests]
