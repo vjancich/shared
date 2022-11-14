@@ -179,7 +179,6 @@ jobs:
       - name: approval
         uses: trstringer/manual-approval@v1.8.0
         with:
-          secret: ${{ github.DEPLOY_GITHUB_TOKEN }}
           approvers: vjancich
           minimum-approvals: 1
           issue-title: "wut???"
