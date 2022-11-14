@@ -175,7 +175,7 @@ jobs:
           else
             echo "No open PRs found"
           fi
-          echo "- PRs found:\n$repos" >> $GITHUB_STEP_SUMMARY
+          echo -e "- PRs found: \n$repos" >> $GITHUB_STEP_SUMMARY
 
 #  merge_pull_requests:
 #    needs: [find_open_pull_requests]
