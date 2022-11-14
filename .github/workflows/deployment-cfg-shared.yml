@@ -171,6 +171,9 @@ jobs:
           if [ $open_prs != 0 ];
             then
               repos=$(cat github_response.json | jq '.items'  | jq '.[].html_url' | sed 's/"//g')
+          else
+            echo "No open PRs found"
+          fi
 
           repos=$(cat github_response.json | jq '.items'  | jq '.[].html_url' | sed 's/"//g')
           echo "nasiel som tieto otvorene PR: $repos"
