@@ -206,7 +206,6 @@ jobs:
 #          gh pr merge ${{ steps.parse_repo.outputs.pr_number }} -s --delete-branch
 
   deploy:
-    environment: tst
     needs: [prepare-inputs,find_open_pull_requests2]
     if: |
       always() && 
