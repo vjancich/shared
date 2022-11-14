@@ -41,5 +41,4 @@ jobs:
       - name: add labels
         uses: actions-ecosystem/action-add-labels@v1
         with:
-          github_token: ${{ secrets.TOKEN_2608 }}
           labels: ${{ steps.find_jira_issue.outputs.issue }}
