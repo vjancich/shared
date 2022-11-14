@@ -157,6 +157,7 @@ jobs:
   find_open_pull_requests2:
     needs: link-to-jira
     runs-on: ubuntu-latest
+    environment: test
     steps:
       - name: Find Pull Requests
         id: search_prs
@@ -171,11 +172,11 @@ jobs:
           if [ $open_prs != 0 ];
             then
               repos=$(cat github_response.json | jq '.items'  | jq '.[].html_url' | sed 's/"//g')
+              echo -e "nasiel som tieto otvorene PR: \n$repos"
           else
             echo "No open PRs found"
           fi
 
-          echo "nasiel som tieto otvorene PR: $repos"
 
 #  merge_pull_requests:
 #    needs: [find_open_pull_requests]
