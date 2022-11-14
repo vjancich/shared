@@ -175,7 +175,6 @@ jobs:
             echo "No open PRs found"
           fi
 
-          repos=$(cat github_response.json | jq '.items'  | jq '.[].html_url' | sed 's/"//g')
           echo "nasiel som tieto otvorene PR: $repos"
 
 #  merge_pull_requests:
