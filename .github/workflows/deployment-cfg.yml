@@ -60,6 +60,7 @@ env:
 jobs:
   prepare-deployment:
     name: "[${{ inputs.environment }}] Application deployment for version: ${{ inputs.software_version }}"
+    environment: tst
     runs-on: ubuntu-latest
 
     steps:
