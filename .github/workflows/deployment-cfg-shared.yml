@@ -245,11 +245,11 @@ jobs:
           echo "nasiel som otvorený PR $REPO/pull/$PR_NUMBER"
 
   deploy:
-    needs: [prepare-inputs,merge_pull_requests]
+    needs: [prepare-inputs,merge_pull_requests2]
     if: |
       always() && 
       needs.prepare-inputs.outputs.matrix != 'none' && 
-      ( needs.merge_pull_requests.result == 'success' || needs.merge_pull_requests.result == 'skipped' )
+      ( needs.merge_pull_requests2.result == 'success' || needs.merge_pull_requests2.result == 'skipped' )
     name: 'Starting deployment for: ${{ matrix.definition.accountName }}/${{ matrix.definition.stackName }}'
     strategy:
       fail-fast: false
