@@ -31,7 +31,9 @@ jobs:
           commits=$(git log --pretty=format:%s $(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})..${{ github.event.pull_request.head.sha }} | sed 's/^/ /'| tr -d '\n' )
           echo "$commits"
           echo "commit_messages=$commits" >> $GITHUB_OUTPUT
-
+          echo "ref name je ${{ github.ref_name }}"
+          echo "ref name je ${{ github.head_ref }}"
+          echo "ref name je ${{ github.base_ref }}"
       - name: Find in commit messages official
         id: find_jira_issue
         uses: atlassian/gajira-find-issue-key@master
