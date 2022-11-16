@@ -118,6 +118,7 @@ jobs:
       - name: Vypis
         run: |
           echo "account je ${{ inputs.account_name }}"
+          echo "Temaplte name je ${{ inputs.TEMPLATE_NAME }}"
           echo "software_version je ${{ steps.get_version.outputs.ServiceVersion }}"
           echo "stack_name je ${{ inputs.stack_name }}"
           echo "app name je ${{ steps.repo_modi.outputs.application_name }}"

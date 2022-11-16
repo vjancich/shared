@@ -12,6 +12,10 @@ on:
         description: 'Product group name'
         type: string
         required: true
+      TEMPLATE_NAME:
+        description: 'Template name'
+        type: string
+        required: false
     secrets:
       JIRA_TOKEN:
         required: true
@@ -221,4 +225,5 @@ jobs:
       account_name: ${{ matrix.definition.accountName }}
       stack_name: ${{ matrix.definition.stackName }}
       PRODUCT_GROUP_NAME: ${{ inputs.PRODUCT_GROUP_NAME }}
+      TEMPLATE_NAME: ${{ inputs.TEMPLATE_NAME }}
     secrets: inherit
