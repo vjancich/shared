@@ -57,7 +57,7 @@ jobs:
           labels=${{ steps.find_jira_issue.outputs.issue }}
           echo "labele sú $labels"
           echo "labels=$labels" >> $GITHUB_OUTPUT
-          pull_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          pull_number=$(jq "$GITHUB_EVENT_PATH")
           echo "------------"
           echo $pull_number
       - name: remove labels
