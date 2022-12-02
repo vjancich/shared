@@ -44,3 +44,8 @@ jobs:
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: ${{ steps.find_jira_issue.outputs.issue }}
+
+      - uses: actions-ecosystem/action-remove-labels@v1
+        if: github.event.pull_request.merged == true
+        with:
+          labels: ${{ steps.find_jira_issue.outputs.issue }}
