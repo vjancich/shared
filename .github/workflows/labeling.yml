@@ -54,10 +54,9 @@ jobs:
         if: github.event.pull_request.merged == true
         run: |
           pr_url=$(cat "$GITHUB_EVENT_PATH" | jq -r .pull_request._links.self.href)
-          echo "------------"
+          curl -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.JIRA_TOKEN_1808 }}" $pr_url > gh_response.json
           echo $pr_url
-          pr_labeles=$(curl -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.JIRA_TOKEN_1808 }}" $pr_url | jq -r ".labels | .[] | select(.name | startswith(\"VLAD\") or startswith(\"KIKI\")) | .name")
-          read -a LabelsArray <<< "$pr_labeles"
+          read -a LabelsArray <<< "$(echo $(cat gh_response.json | jq -r ".labels | .[] | select(.name | startswith(\"VLAD\") or startswith(\"KIKI\")) | .name" | tr -d '\r'))"
           
           for label in "${LabelsArray[@]}"
             do
