@@ -57,7 +57,7 @@ jobs:
           labels=${{ steps.find_jira_issue.outputs.issue }}
           echo "labele sú $labels"
           echo "labels=$labels" >> $GITHUB_OUTPUT
-          "echo '${{toJSON(github.event)}}'" > gh_event.json
+          '${{toJSON(github.event)}}' > gh_event.json
           echo "------------"
           cat gh_event.json
       - name: remove labels
