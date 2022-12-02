@@ -54,13 +54,11 @@ jobs:
         if: github.event.pull_request.merged == true
         run: |
           pr_url=$(cat "$GITHUB_EVENT_PATH" | jq -r .pull_request._links.self.href)
-          echo $pr_url
           curl -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.JIRA_TOKEN_1808 }}" $pr_url > gh_response.json
           read -a LabelsArray <<< "$(echo $(cat gh_response.json | jq -r ".labels | .[] | select(.name | startswith(\"VLAD\") or startswith(\"KIKI\")) | .name" | tr -d '\r'))"
           
           for label in "${LabelsArray[@]}"
             do
               echo "removing label $label"
-              echo "repo je ${{ github.repository }}"
-              curl -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.JIRA_TOKEN_1808 }}" https://api.github.com/repos/vjancich/${{ github.repository }}/labels/$label
+              curl -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.JIRA_TOKEN_1808 }}" https://api.github.com/repos/${{ github.repository }}/labels/$label
             done
