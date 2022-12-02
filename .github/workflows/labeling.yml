@@ -57,9 +57,9 @@ jobs:
           labels=${{ steps.find_jira_issue.outputs.issue }}
           echo "labele sú $labels"
           echo "labels=$labels" >> $GITHUB_OUTPUT
-          cat "$GITHUB_EVENT_PATH"
+          pr_url=$(cat "$GITHUB_EVENT_PATH" ) | jq -r .pull_request._links.self.href
           echo "------------"
-          echo $pull_number
+          echo $pr_url
       - name: remove labels
         if: github.event.pull_request.merged == true
         run: |
