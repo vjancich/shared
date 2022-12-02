@@ -50,7 +50,14 @@ jobs:
         with:
           labels: ${{ steps.find_jira_issue.outputs.issue }}
 
-      - uses: actions-ecosystem/action-remove-labels@v1
+      - name: save labels
+        if: github.event.pull_request.merged == false
+        id: save_labels
+        run: |
+          labels=${{ steps.find_jira_issue.outputs.issue }}
+          echo "labele sú $labels"
+          echo "labels=$labels" >> $GITHUB_OUTPUT
+      - name: remove labels
         if: github.event.pull_request.merged == true
-        with:
-          labels: VLAD-29
+        run: |
+          curl -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.JIRA_TOKEN_1808 }}" https://api.github.com/repos/vjancich/${{ github.repository }}/labels/${{ steps.save_labels.outputs.labels }}
