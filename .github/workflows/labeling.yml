@@ -6,13 +6,12 @@ on:
 jobs:
   check-jira-tickets-commits:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == false && github.event.action != 'closed'
     steps:
       - uses: actions/checkout@v3
-        if: github.event.pull_request.merged == false && github.event.action != 'closed'
         with:
           fetch-depth: 0
       - uses: ohpensource/platform-cicd/actions/git/ensure-commits-message-jira-ticket@2.15.0.1
-        if: github.event.pull_request.merged == false && github.event.action != 'closed'
         name: Ensure Jira ticket in all commits
         with:
           base-branch: $GITHUB_BASE_REF
@@ -20,14 +19,12 @@ jobs:
 
       - name: Login
         uses: atlassian/gajira-login@v2.0.0
-        if: github.event.pull_request.merged == false && github.event.action != 'closed'
         env:
           JIRA_BASE_URL: https://vladys.atlassian.net
           JIRA_USER_EMAIL: valdo564@azet.sk
           JIRA_API_TOKEN: ${{ secrets.JIRA_TOKEN }}
 
       - name: Jira
-        if: github.event.pull_request.merged == false && github.event.action != 'closed'
         id: find_commits
         run: |
           echo "base sha je ${{ github.event.pull_request.base.sha }}"
@@ -41,22 +38,23 @@ jobs:
       - name: Find in commit messages official
         id: find_jira_issue
         uses: atlassian/gajira-find-issue-key@master
-        if: github.event.pull_request.merged == false && github.event.action != 'closed'
         with:
           string: ${{ steps.find_commits.outputs.commit_messages }}
 
       - name: add labels
-        if: github.event.pull_request.merged == false && github.event.action != 'closed'
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: ${{ steps.find_jira_issue.outputs.issue }}
 
+  remove-labels:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true || github.event.action == 'closed'
+    steps:
       - name: remove labels
-        if: github.event.pull_request.merged == true || github.event.action == 'closed'
         run: |
           pr_url=$(cat "$GITHUB_EVENT_PATH" | jq -r .pull_request._links.self.href)
-          curl -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.JIRA_TOKEN_1808 }}" $pr_url > gh_response.json
-          read -a LabelsArray <<< "$(echo $(cat gh_response.json | jq -r ".labels | .[] | select(.name | startswith(\"VLAD\") or startswith(\"KIKI\")) | .name" | tr -d '\r'))"
+          gh_response=$(curl -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.JIRA_TOKEN_1808 }}" $pr_url)
+          read -a LabelsArray <<< "$(echo $gh_response | jq -r ".labels | .[] | select(.name | startswith(\"VLAD\") or startswith(\"KIKI\")) | .name" | tr -d '\r')"
           
           for label in "${LabelsArray[@]}"
             do
