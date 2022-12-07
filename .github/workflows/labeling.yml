@@ -54,9 +54,8 @@ jobs:
         run: |
           pr_url=$(cat "$GITHUB_EVENT_PATH" | jq -r .pull_request._links.self.href)
           gh_response=$(curl -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.JIRA_TOKEN_1808 }}" $pr_url)
-          read -d '' -a  LabelsArray <<< "$(echo $gh_response | jq -r ".labels | .[] | select(.name | startswith(\"VLAD\") or startswith(\"KIKI\")) | .name" | tr -d '\r')"
           
-          for label in "${LabelsArray[@]}"
+          for label in "$(echo $gh_response | jq -r ".labels | .[] | select(.name | startswith(\"VLAD\") or startswith(\"KIKI\")) | .name" | tr -d '\r')"
             do
               echo "removing label $label"
               curl -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.JIRA_TOKEN_1808 }}" https://api.github.com/repos/${{ github.repository }}/labels/$label
