@@ -1,0 +1,81 @@
+name: Start or redeploy ECS
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment'
+        type: string
+        required: true
+        default: dev
+      service_name:
+        description: "Service to redeploy (by default all project services)"
+        type: string
+        required: true
+        default: all
+      project_name:
+        description: "Project to redeploy (if not set - project artifactId)"
+        type: string
+        required: false
+      deployment:
+        description: "Deployment identification of multiple services on same stage"
+        type: string
+        required: false
+      stack_prefix:
+        description: "Prefix of CF stack to redeploy (if not set - project name)"
+        type: string
+        required: false
+      client:
+        description: "Name of client"
+        type: string
+        required: false
+        default: shared
+      account_prefix:
+        description: "Prefix of account to deploy to (ohp, dvc)"
+        type: string
+        required: false
+        default: dvc
+      OMIT_SERVICE_NAME:
+        description: "Service to not redeploy (if this value is different from default 'none' then service_name will be set to 'all')"
+        type: string
+        required: false
+        default: none
+      DEPLOYMENT_MODE:
+        description: 'Deployment mode: force-restart, zero-downtime'
+        type: string
+        required: false
+        default: 'force-restart'
+    secrets:
+      COR_CICD_AUTOMATION_AWS_ACCESS_KEY_ID:
+        required: true
+      COR_CICD_AUTOMATION_AWS_SECRET_ACCESS_KEY:
+        required: true
+      DEPLOY_GITHUB_TOKEN:
+        required: true
+
+#concurrency:
+#  group: redeploy-ecs-${{ inputs.environment }}-${{ inputs.service_name }}
+
+env:
+  BILLING_ACCOUNT_AUTOMATION_ROLE_ARN: arn:aws:iam::183992486874:role/cor-cicd-automation
+  AWS_MAX_ROLE_DURATION_SECONDS: 3600
+  AWS_REGION: 'eu-west-1'
+  AWS_ACCOUNT_TAG: "${{ inputs.account_prefix }}-${{ inputs.client }}-${{ inputs.environment }}"
+
+jobs:
+  prepare-redeploy:
+    name: "[${{ inputs.environment }}] Prepare redeploy ECS for: ${{ inputs.service_name }}"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Redeploy summary
+        run: |
+          echo "## Redeploy summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Environment: ${{ steps.redeploy_parameters.outputs.ecs_environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Client: ${{ inputs.client }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Service name: ${{ inputs.service_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Project: ${{ steps.redeploy_parameters.outputs.ecs_project }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Deployment: ${{ inputs.deployment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Stack prefix: ${{ inputs.stack_prefix }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Deployment mode: ${{ inputs.DEPLOYMENT_MODE }}" >> $GITHUB_STEP_SUMMARY
+          echo "- AWS Account tag: ${{ env.AWS_ACCOUNT_TAG }}" >> $GITHUB_STEP_SUMMARY
