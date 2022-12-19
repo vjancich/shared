@@ -91,6 +91,7 @@ jobs:
               transition_id=1
             elif [[ ${{ steps.find_jira_issue.outputs.issue }} == VLAD* ]]; then
               transition_id=31
+            fi
           else
             echo "No Jira issue found."
             exit 1
