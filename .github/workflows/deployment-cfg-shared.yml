@@ -97,23 +97,23 @@ jobs:
           fi
           echo "transition id je $transition_id"
           
-          curl --request POST \
-          --url 'https://vladys.atlassian.net/rest/api/3/issue/${{ steps.find_jira_issue.outputs.issue }}/transitions' \
-          --user 'valdo564@azet.sk:${{ secrets.JIRA_TOKEN }}' \
-          --header 'Accept: application/json' \
-          --header 'Content-Type: application/json' \
-          --data '{
-            "transition": {
-              "id": "'$transition_id'"
-              }
-            }' -o jira_output.log
-          if [ -s jira_output.log ]; then
-            echo "Jira status not changed, check error message"
-            cat jira_output.log
-            exit 1
-          else
-            echo "Jira status changed successfully"
-          fi
+#          curl --request POST \
+#          --url 'https://vladys.atlassian.net/rest/api/3/issue/${{ steps.find_jira_issue.outputs.issue }}/transitions' \
+#          --user 'valdo564@azet.sk:${{ secrets.JIRA_TOKEN }}' \
+#          --header 'Accept: application/json' \
+#          --header 'Content-Type: application/json' \
+#          --data '{
+#            "transition": {
+#              "id": "'$transition_id'"
+#              }
+#            }' -o jira_output.log
+#          if [ -s jira_output.log ]; then
+#            echo "Jira status not changed, check error message"
+#            cat jira_output.log
+#            exit 1
+#          else
+#            echo "Jira status changed successfully"
+#          fi
     outputs:
       jiraIssue: ${{ steps.find_jira_issue.outputs.issue }}
 
