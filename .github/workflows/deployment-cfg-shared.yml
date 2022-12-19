@@ -95,6 +95,7 @@ jobs:
                 transition_id=31
           else
             echo "No Jira issue found."
+            exit 1
           fi
           echo "transition id je $transition_id"
           
