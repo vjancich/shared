@@ -87,7 +87,7 @@ jobs:
         run: |
           echo "Ticket je ${{ steps.find_jira_issue.outputs.issue }}"
           if [ ! -z "${{ steps.find_jira_issue.outputs.issue }}" ]; then
-            if [ "${{ steps.find_jira_issue.outputs.issue }}" == CCDESK* ]; then
+            if [[ "${{ steps.find_jira_issue.outputs.issue }}" == CCDESK* ]]; then
               transition_id=1
             elif [[ "${{ steps.find_jira_issue.outputs.issue }}" == VLAD* ]]; then
               transition_id=31
