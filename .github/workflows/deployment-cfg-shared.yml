@@ -87,12 +87,10 @@ jobs:
         run: |
           echo "Ticket je ${{ steps.find_jira_issue.outputs.issue }}"
           if [ ! -z ${{ steps.find_jira_issue.outputs.issue }} ]; then
-            if [[ ${{ steps.find_jira_issue.outputs.issue }} == CCDESK* ]];
-              then
-                transition_id=1
-            elif [[ ${{ steps.find_jira_issue.outputs.issue }} == VLAD* ]];
-              then
-                transition_id=31
+            if [[ ${{ steps.find_jira_issue.outputs.issue }} == CCDESK* ]]; then
+              transition_id=1
+            elif [[ ${{ steps.find_jira_issue.outputs.issue }} == VLAD* ]]; then
+              transition_id=31
           else
             echo "No Jira issue found."
             exit 1
@@ -109,13 +107,12 @@ jobs:
               "id": "'$transition_id'"
               }
             }' -o jira_output.log
-          if [ -s jira_output.log ]
-            then
-              echo "Jira status not changed, check error message"
-              cat jira_output.log
-              exit 1
-            else
-              echo "Jira status changed successfully"
+          if [ -s jira_output.log ]; then
+            echo "Jira status not changed, check error message"
+            cat jira_output.log
+            exit 1
+          else
+            echo "Jira status changed successfully"
           fi
     outputs:
       jiraIssue: ${{ steps.find_jira_issue.outputs.issue }}
