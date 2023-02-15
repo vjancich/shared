@@ -174,9 +174,9 @@ jobs:
 
       - name: Prepare output
         run: |
-          mkdir -p output/${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}
-          mv ${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info output/deployment
-          mv ${{ github.workspace }}/README.md output/deployment
+          mkdir -p output/${{ inputs.account_name }}/${{ inputs.stack_name }}
+          mv ${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info output/${{ inputs.account_name }}/${{ inputs.stack_name }}
+          mv ${{ github.workspace }}/README.md output/${{ inputs.account_name }}/${{ inputs.stack_name }}
           
           echo ARTIFACT_ID="output/deployment" >> $GITHUB_ENV
 
