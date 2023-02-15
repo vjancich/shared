@@ -172,11 +172,19 @@ jobs:
             fi
           done
 
+      - name: Prepare output
+        run: |
+          mkdir -p output/deployment
+          mv ${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info output/deployment
+          mv ${{ github.workspace }}/README.md output/deployment
+          
+          echo ARTIFACT_ID="output/deployment" >> $GITHUB_ENV
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: artifakty
-          path: ${{ github.workspace }}/cloudformation
+          path: output/**
           retention-days: 1
 
 #      - name: Setup git config
