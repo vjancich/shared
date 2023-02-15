@@ -185,7 +185,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: artefakty
-          path: outputs/**
+          path: output/**
           retention-days: 1
 
 #      - name: Setup git config
