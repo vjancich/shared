@@ -246,6 +246,22 @@ jobs:
         run: ls -R
         working-directory: output/**
 
-      - name: View artifacts
-        run: |          
-          cat output/davincicloud-adaxio-eureka-server/davincicloud-adaxio/eureka-server/deploy.info
+#      - name: View artifacts
+#        run: |
+#          cat output/davincicloud-adaxio-eureka-server/davincicloud-adaxio/eureka-server/deploy.info
+
+      - name: Setup git config
+        run: |
+          git config user.email "github-svc@ohpen.com"
+          git config user.name "GitHub Actions"
+
+      - name: Commit files
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+           git add output/davincicloud-adaxio-eureka-server/davincicloud-adaxio/eureka-server/deploy.info
+           git add output/davincicloud-adaxio-eureka-server/davincicloud-adaxio/eureka-server/README.md
+           git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
+           git push;
+          else
+           echo "no change detected";
+          fi
