@@ -240,11 +240,11 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          path: output/**
+          path: output
 
       - name: Display structure of downloaded files
         run: ls -R
-        working-directory: output/**
+        working-directory: output
 
 #      - name: View artifacts
 #        run: |
@@ -255,19 +255,13 @@ jobs:
           git config user.email "github-svc@ohpen.com"
           git config user.name "GitHub Actions"
 
-      - name: Pomoc
+      - name: Commit files
         run: |
-          ls
-          cd output
-          ls
-
-#      - name: Commit files
-#        run: |
-#          if [ -n "$(git status --porcelain)" ]; then
-#           git add ${{ github.workspace }}/output/davincicloud-adaxio-eureka-server/davincicloud-adaxio/eureka-server/deploy.info
-#           git add ${{ github.workspace }}/output/davincicloud-adaxio-eureka-server/davincicloud-adaxio/eureka-server/README.md
-#           git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
-#           git push;
-#          else
-#           echo "no change detected";
-#          fi
+          if [ -n "$(git status --porcelain)" ]; then
+           git add output/davincicloud-adaxio-eureka-server/davincicloud-adaxio/eureka-server/deploy.info
+           git add output/davincicloud-adaxio-eureka-server/davincicloud-adaxio/eureka-server/README.md
+           git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
+           git push;
+          else
+           echo "no change detected";
+          fi
