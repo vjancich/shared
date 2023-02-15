@@ -256,7 +256,7 @@ jobs:
       - name: Commit files
         run: |
           if [ -n "$(git status --porcelain)" ]; then
-           git add output/cloudformation/davincicloud-adaxio/eureka-server/deploy.info
+           git add output/davincicloud-adaxio/eureka-server/deploy.info
            git add output/README.md
            git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
            git push;
