@@ -172,17 +172,24 @@ jobs:
             fi
           done
 
-      - name: Setup git config
-        run: |
-          git config user.email "github-svc@ohpen.com"
-          git config user.name "GitHub Actions"
-      - name: Commit files
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-           git add ${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info
-           git add README.md
-           git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
-           git push;
-          else
-           echo "no change detected";
-          fi
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifakty
+          path: /cloudformation
+          retention-days: 1
+
+#      - name: Setup git config
+#        run: |
+#          git config user.email "github-svc@ohpen.com"
+#          git config user.name "GitHub Actions"
+#      - name: Commit files
+#        run: |
+#          if [ -n "$(git status --porcelain)" ]; then
+#           git add ${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info
+#           git add README.md
+#           git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
+#           git push;
+#          else
+#           echo "no change detected";
+#          fi

@@ -229,3 +229,19 @@ jobs:
       PRODUCT_GROUP_NAME: ${{ inputs.PRODUCT_GROUP_NAME }}
       TEMPLATE_NAME: ${{ inputs.TEMPLATE_NAME }}
     secrets: inherit
+
+  download-artifacts:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: /cloudformation
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: /cloudformation
