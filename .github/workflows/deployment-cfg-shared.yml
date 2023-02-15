@@ -255,6 +255,10 @@ jobs:
 
       - name: Commit files
         run: |
+          echo ${{ github.workspace }}
+          echo "$GITHUB_WORKSPACE"
+          echo ${{ runner.workspace }}
+          echo $RUNNER_WORKSPACE
           mv output/artefakty/davincicloud-adaxio/eureka-server/deploy.info odm-eureka-cfg/cloudformation/davincicloud-adaxio/eureka-server
           mv output/artefakty/README.md odm-eureka-cfg
           
