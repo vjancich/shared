@@ -236,6 +236,8 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
+        with:
+          ref: tst
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -245,10 +247,6 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
         working-directory: output
-
-#      - name: View artifacts
-#        run: |
-#          cat output/davincicloud-adaxio-eureka-server/davincicloud-adaxio/eureka-server/deploy.info
 
       - name: Setup git config
         run: |
