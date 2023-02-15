@@ -262,7 +262,6 @@ jobs:
           cat output/artefakty/davincicloud-adaxio/eureka-server/deploy.info
           ls
           echo "Bla"
-          ls odm-eureka-cfg/cloudformation/davincicloud-adaxio/eureka-server
           mv output/artefakty/davincicloud-adaxio/eureka-server/deploy.info cloudformation/davincicloud-adaxio/eureka-server
           mv output/artefakty/README.md .
 
