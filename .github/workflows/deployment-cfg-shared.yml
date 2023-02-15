@@ -240,7 +240,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          path: /cloudformation
+          path: ${{ github.workspace }}/cloudformation
 
       - name: Display structure of downloaded files
         run: ls -R

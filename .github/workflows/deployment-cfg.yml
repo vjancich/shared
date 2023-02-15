@@ -176,7 +176,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: artifakty
-          path: /cloudformation
+          path: ${{ github.workspace }}/cloudformation
           retention-days: 1
 
 #      - name: Setup git config
