@@ -133,7 +133,7 @@ jobs:
       - name: Checkout Configuration repository sources
         uses: actions/checkout@v2
         with:
-          repository: ohpen/odm-eureka-cfg
+          repository: vjancich/odm-eureka-cfg
           ref: tst
           token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
 
