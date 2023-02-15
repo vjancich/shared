@@ -245,3 +245,8 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
         working-directory: output/**
+
+      - name: View artifacts
+        run: |          
+          cat ./davincicloud-adaxio-eureka-server/davincicloud-adaxio/eureka-server/deploy.info
+          cat output/davincicloud-adaxio-eureka-server/davincicloud-adaxio/eureka-server/deploy.info
