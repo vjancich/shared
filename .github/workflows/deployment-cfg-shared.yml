@@ -255,8 +255,8 @@ jobs:
 
       - name: Commit files
         run: |
-          mv output/artefakty/davincicloud-adaxio/eureka-server/deploy.info ${{ github.workspace }}/cloudformation/davincicloud-adaxio/eureka-server
-          mv output/artefakty/README.md ${{ github.workspace }}
+          mv output/artefakty/davincicloud-adaxio/eureka-server/deploy.info odm-eureka-cfg/cloudformation/davincicloud-adaxio/eureka-server
+          mv output/artefakty/README.md odm-eureka-cfg
           
           if [ -n "$(git status --porcelain)" ]; then
            git add ${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info
