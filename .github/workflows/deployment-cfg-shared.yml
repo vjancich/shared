@@ -260,6 +260,9 @@ jobs:
           echo ${{ runner.workspace }}
           echo $RUNNER_WORKSPACE
           cat output/artefakty/davincicloud-adaxio/eureka-server/deploy.info
+          ls
+          echo "Bla"
+          ls odm-eureka-cfg/cloudformation/davincicloud-adaxio/eureka-server
 #          mv output/artefakty/davincicloud-adaxio/eureka-server/deploy.info odm-eureka-cfg/cloudformation/davincicloud-adaxio/eureka-server
 #          mv output/artefakty/README.md odm-eureka-cfg
 #
