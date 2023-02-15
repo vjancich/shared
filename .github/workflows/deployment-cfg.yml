@@ -184,8 +184,10 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.ARTIFACT_ID }}
-          path: output/**
+          name: artefakty
+          path: |
+            ${{ github.workspace }}/cloudformation
+            README.md
           retention-days: 1
 
 #      - name: Setup git config
