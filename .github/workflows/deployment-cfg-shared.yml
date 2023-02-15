@@ -255,8 +255,10 @@ jobs:
           git config user.email "github-svc@ohpen.com"
           git config user.name "GitHub Actions"
 
-      - name: Setup git config
+      - name: Pomoc
         run: |
+          ls
+          cd output
           ls
 
 #      - name: Commit files
