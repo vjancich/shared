@@ -124,285 +124,65 @@ jobs:
           echo "app name je ${{ steps.repo_modi.outputs.application_name }}"
           echo "cfg repo name je ${{ steps.repo_modi.outputs.cfg_repo_name }}"
           echo "app repo name je ${{ steps.repo_modi.outputs.app_repo_name }}"
-#      - name: Prepare maven parameters
-#        id: maven_parametersP
-#        run: |
-#          INPUT_VERSION="${{ inputs.software_version }}"
-#          INPUT_STACK_NAME="${{ inputs.stack_name }}"
-#          INPUT_TEMPLATE_NAME="${{ inputs.TEMPLATE_NAME }}"
-#
-#          MVN_PROJECT_NAME=`xmllint --xpath '//*[local-name()="project"]/*[local-name()="artifactId"]/text()' pom.xml`
-#          SNAPSHOT_VERSION=`xmllint --xpath '//*[local-name()="project"]/*[local-name()="version"]/text()' pom.xml`
-#
-#          echo "Maven project version: ${SNAPSHOT_VERSION}"
-#          echo "Maven project name:    ${MVN_PROJECT_NAME}"
-#
-#          if [ -z "$INPUT_VERSION" ]; then
-#              echo "::set-output name=software_version::${SNAPSHOT_VERSION}"
-#            else
-#              echo "::set-output name=software_version::${INPUT_VERSION}"
-#          fi
-#
-#          if [ -z "$INPUT_STACK_NAME" ]; then
-#            echo "::set-output name=stack_name::${MVN_PROJECT_NAME}"
-#          else
-#            echo "::set-output name=stack_name::${INPUT_STACK_NAME}"
-#          fi
-#
-#          if [ -z "$INPUT_TEMPLATE_NAME" ]; then
-#            echo "::set-output name=template_name::${MVN_PROJECT_NAME}"
-#          else
-#            echo "::set-output name=template_name::${INPUT_TEMPLATE_NAME}"
-#          fi
-#
-#      - name: Preparing product dependent parameters
-#        id: product_parameters
-#        run: |
-#          APPLICATION_NAME=`echo ${{ github.event.repository.name }} | sed 's/-\([a-z]*-java\)//g'`
-#          echo "::set-output name=application_name::${APPLICATION_NAME}"
-#          echo "::set-output name=cfg_repo_name::${APPLICATION_NAME}-${{ env.CFG_REPO_SUFFIX }}"
-#
-#      - name: Checkout Configuration repository sources
-#        uses: actions/checkout@v2
-#        with:
-#          repository: ohpen/${{ steps.product_parameters.outputs.cfg_repo_name }}
-#          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
-#          ref: ${{ inputs.environment }}
-#          path: _cfg
-#
-#      - name: Preparing config parameters
-#        id: config_parameters
-#        run: |
-#          Domain=${{ inputs.DOMAIN || inputs.PRODUCT_GROUP_NAME }}
-#          Service=${{ inputs.SERVICE || steps.product_parameters.outputs.application_name }}
-#          Deployment=${{ inputs.deployment || 'main' }}
-#          UseStageAsStackPrefix=false
-#
-#          # override input / default values with values in deployment.conf if exists
-#          DEPLOYMENT_CONFIG_FILE=_cfg/cloudformation/${{ inputs.account_name }}/${{ steps.maven_parameters.outputs.stack_name }}/deployment.conf
-#          if [ -f "$DEPLOYMENT_CONFIG_FILE" ]; then
-#            echo "Read deployment config from: $DEPLOYMENT_CONFIG_FILE"
-#            . $DEPLOYMENT_CONFIG_FILE
-#          fi
-#
-#          echo "::set-output name=Domain::$Domain"
-#          echo "::set-output name=Service::$Service"
-#          echo "::set-output name=Deployment::$Deployment"
-#          echo "::set-output name=UseStageAsStackPrefix::$UseStageAsStackPrefix"
-#
-#      - name: Preparing deployment parameters
-#        id: deployment_parameters
-#        run: |
-#          PARAMETERS_FILE=${{ github.workspace }}/_cfg/cloudformation/${{ inputs.account_name }}/${{ steps.maven_parameters.outputs.stack_name }}/parameters.json
-#          ACCOUNT_ID_FILE=${{ github.workspace }}/_cfg/cloudformation/${{ inputs.account_name }}/account_id
-#
-#          echo "Checking presence of configuration files"
-#          if ! [[ -f "$PARAMETERS_FILE" ]]; then
-#              echo "${PARAMETERS_FILE} does not exists."
-#              exit 2
-#          fi
-#
-#          if ! [[ -f "$ACCOUNT_ID_FILE" ]]; then
-#              echo "${ACCOUNT_ID_FILE} does not exists."
-#              exit 2
-#          fi
-#
-#          echo "Reading account ID from file"
-#          ACCOUNT_ID=$(sed -n '1p' $ACCOUNT_ID_FILE)
-#
-#          echo "Fixing stack prefix environment variable"
-#          ENV_STACK_PREFIX=${{ inputs.environment}}
-#          if [ "$ENV_STACK_PREFIX" == "prd" ] && [ "${{ steps.config_parameters.outputs.UseStageAsStackPrefix }}" == "false" ]; then
-#              ENV_STACK_PREFIX="prod"
-#          fi
-#
-#          if [ "$ENV_STACK_PREFIX" == "tst" ] && [ "${{ steps.config_parameters.outputs.UseStageAsStackPrefix }}" == "false" ]; then
-#             ENV_STACK_PREFIX="test"
-#          fi
-#
-#          echo "Setting output deployment parameters"
-#          echo "::set-output name=cf_parameters_file::${PARAMETERS_FILE}"
-#          echo "::set-output name=cf_template_url::https://s3.amazonaws.com/${{ env.ARTIFACTS_S3_BUCKET }}/cloudformation/${{ steps.maven_parameters.outputs.template_name }}/${{ steps.maven_parameters.outputs.software_version }}/${{ steps.maven_parameters.outputs.template_name }}-main-${{ steps.maven_parameters.outputs.software_version }}.yaml"
-#          echo "::set-output name=cf_stack_name::${ENV_STACK_PREFIX}-${{ steps.maven_parameters.outputs.stack_name }}"
-#          echo "::set-output name=aws_deploy_role::arn:aws:iam::${ACCOUNT_ID}:role/${{ inputs.environment}}-cicd-automation"
-#
-#      - name: Deployment summary
-#        run: |
-#          echo "## Deployment summary" >> $GITHUB_STEP_SUMMARY
-#          echo "- Environment: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-#          echo "- Account name: ${{ inputs.account_name }}" >> $GITHUB_STEP_SUMMARY
-#          echo "- Deployment: ${{ steps.config_parameters.outputs.Deployment }}" >> $GITHUB_STEP_SUMMARY
-#          echo "- Software version: ${{ steps.maven_parameters.outputs.software_version }}" >> $GITHUB_STEP_SUMMARY
-#          echo "- Stack base name: ${{ steps.maven_parameters.outputs.stack_name }}" >> $GITHUB_STEP_SUMMARY
-#          echo "- CloudFormation template name: ${{ steps.maven_parameters.outputs.template_name }}" >> $GITHUB_STEP_SUMMARY
-#          echo "- Domain: ${{ steps.config_parameters.outputs.Domain }}" >> $GITHUB_STEP_SUMMARY
-#          echo "- Service: ${{ steps.config_parameters.outputs.Service }}" >> $GITHUB_STEP_SUMMARY
-#          echo "## Execution summary:" >> $GITHUB_STEP_SUMMARY
-#          echo "- Stack name: ${{ steps.deployment_parameters.outputs.cf_stack_name }}" >> $GITHUB_STEP_SUMMARY
-#          echo "- Template: ${{ steps.deployment_parameters.outputs.cf_template_url }}" >> $GITHUB_STEP_SUMMARY
-#          echo "- Parameters file: ${{ steps.deployment_parameters.outputs.cf_parameters_file }}" >> $GITHUB_STEP_SUMMARY
-#          echo "- Execution role: ${{ steps.deployment_parameters.outputs.aws_deploy_role }}" >> $GITHUB_STEP_SUMMARY
-#    outputs:
-#      software_version: ${{ steps.maven_parameters.outputs.software_version }}
-#      stack_name: ${{ steps.maven_parameters.outputs.stack_name }}
-#      template_name: ${{ steps.maven_parameters.outputs.template_name }}
-#      cfg_repo_name: ${{ steps.product_parameters.outputs.cfg_repo_name }}
-#      Deployment: ${{ steps.config_parameters.outputs.Deployment }}
-#      Domain: ${{ steps.config_parameters.outputs.Domain }}
-#      Service: ${{ steps.config_parameters.outputs.Service }}
-#      cf_stack_name: ${{ steps.deployment_parameters.outputs.cf_stack_name }}
-#      cf_template_url: ${{ steps.deployment_parameters.outputs.cf_template_url }}
-#      cf_parameters_file: ${{ steps.deployment_parameters.outputs.cf_parameters_file }}
-#      aws_deploy_role: ${{ steps.deployment_parameters.outputs.aws_deploy_role }}
-#
-#  deploy:
-#    needs: [ prepare-deployment ]
-#    environment: ${{ inputs.environment }}
-#    name: "[${{ inputs.environment }}] Application deployment for: '${{ needs.prepare-deployment.outputs.template_name }}/${{ needs.prepare-deployment.outputs.software_version }}'"
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Deployment payload
-#        run: |
-#          echo "################################################################################"
-#          echo "                         DEPLOYMENT REQUEST FOR                                 "
-#          echo "Environment:          ${{ inputs.environment }}                                 "
-#          echo "Account name:         ${{ inputs.account_name }}                                "
-#          echo "Deployment:           ${{ needs.prepare-deployment.outputs.Deployment }}        "
-#          echo "Version:              ${{ needs.prepare-deployment.outputs.software_version }}  "
-#          echo "Stack base name:      ${{ needs.prepare-deployment.outputs.stack_name }}        "
-#          echo "Template name:        ${{ needs.prepare-deployment.outputs.template_name }}     "
-#          echo "################################################################################"
-#
-#      - name: Checkout Configuration repository sources
-#        uses: actions/checkout@v2
-#        with:
-#          repository: ohpen/${{ needs.prepare-deployment.outputs.cfg_repo_name }}
-#          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
-#          ref: ${{ inputs.environment }}
-#          path: _cfg
-#
-#      - name: Add profile credentials to ~/.aws/credentials
-#        run: |
-#          aws configure set aws_access_key_id ${{ secrets.COR_CICD_AUTOMATION_AWS_ACCESS_KEY_ID }} --profile cor_cicd
-#          aws configure set aws_secret_access_key ${{ secrets.COR_CICD_AUTOMATION_AWS_SECRET_ACCESS_KEY }} --profile cor_cicd
-#          aws configure set region ${{ env.AWS_REGION }} --profile cor_cicd
-#
-#          aws configure set role_arn ${{ env.SYNC_AUTOMATION_CORE_ROLE_ARN }} --profile sync
-#          aws configure set source_profile cor_cicd --profile sync
-#
-#      - name: Synchronize parameters and includes
-#        run: |
-#          aws s3 sync --profile sync --acl authenticated-read \
-#            ${{ github.workspace }}/_cfg/cloudformation/${{ inputs.account_name }}/${{ needs.prepare-deployment.outputs.stack_name }} \
-#            s3://${{ env.ARTIFACTS_S3_BUCKET }}/params/${{ inputs.account_name }}/${{ inputs.environment}}/${{ needs.prepare-deployment.outputs.stack_name }}/
-#
-#      - name: Synchronize configuration
-#        if: hashFiles('_cfg/configuration/**') != ''
-#        run: |
-#          aws s3 sync --profile sync --acl authenticated-read \
-#            ${{ github.workspace }}/_cfg/configuration/${{ inputs.account_name }}/${{ needs.prepare-deployment.outputs.stack_name }} \
-#            s3://${{ env.ARTIFACTS_S3_BUCKET }}/configuration/${{ inputs.account_name }}/${{ inputs.environment}}/${{ needs.prepare-deployment.outputs.stack_name }}/
-#
-#      - name: Configure AWS credentials
-#        uses: aws-actions/configure-aws-credentials@v1
-#        with:
-#          aws-access-key-id: ${{ secrets.COR_CICD_AUTOMATION_AWS_ACCESS_KEY_ID }}
-#          aws-secret-access-key: ${{ secrets.COR_CICD_AUTOMATION_AWS_SECRET_ACCESS_KEY }}
-#          role-to-assume: ${{ needs.prepare-deployment.outputs.aws_deploy_role }}
-#          role-duration-seconds: ${{ env.AWS_MAX_ROLE_DURATION_SECONDS }}
-#          aws-region: ${{ env.AWS_REGION }}
-#
-#      - name: Retrieve client name
-#        id: retrieve_client
-#        run: |
-#          CLIENT_NAME=$(aws ssm get-parameter --name "/account-metadata/client" | jq -r '.Parameter.Value')
-#          echo "::set-output name=client_name::${CLIENT_NAME}"
-#
-#      - name: "[${{ inputs.environment }}] Deploying application: '${{ needs.prepare-deployment.outputs.template_name }}' with version: '${{ needs.prepare-deployment.outputs.software_version }}' to '${{ needs.prepare-deployment.outputs.cf_stack_name }}' CloudFormation stack"
-#        uses: aws-actions/aws-cloudformation-github-deploy@v1
-#        with:
-#          name: ${{ needs.prepare-deployment.outputs.cf_stack_name }}
-#          template: ${{ needs.prepare-deployment.outputs.cf_template_url }}
-#          no-fail-on-empty-changeset: 1
-#          capabilities: "CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND"
-#          timeout-in-minutes: 15
-#          parameter-overrides: file://${{ needs.prepare-deployment.outputs.cf_parameters_file }}
-#          tags: '[
-#            { "Key": "Client", "Value": "${{ steps.retrieve_client.outputs.client_name }}" },
-#            { "Key": "Stage", "Value": "${{ inputs.environment }}" },
-#            { "Key": "Deployment", "Value": "${{ needs.prepare-deployment.outputs.Deployment }}" },
-#            { "Key": "IacRepo", "Value": "https://github.com/ohpen/${{ github.event.repository.name }}" },
-#            { "Key": "Domain", "Value": "${{ needs.prepare-deployment.outputs.Domain }}" },
-#            { "Key": "Service", "Value": "${{ needs.prepare-deployment.outputs.Service }}" },
-#            { "Key": "Datadog", "Value": "false" }
-#        ]'
-#    outputs:
-#      deployment_version: ${{ needs.prepare-deployment.outputs.software_version }}
-#      account_name: ${{ inputs.account_name }}
-#      stack_name: ${{ needs.prepare-deployment.outputs.stack_name }}
-#      template_name: ${{ needs.prepare-deployment.outputs.template_name }}
-#      environment: ${{ inputs.environment }}
-#      cfg_repo_name: ${{ needs.prepare-deployment.outputs.cfg_repo_name }}
-#
-#  update_deployment_info:
-#    needs: deploy
-#    runs-on: ubuntu-latest
-#    name: Update the deployment info
-#    steps:
-#      - name: Checkout Configuration repository sources
-#        uses: actions/checkout@v2
-#        with:
-#          repository: ohpen/${{ needs.deploy.outputs.cfg_repo_name }}
-#          ref: ${{ needs.deploy.outputs.environment }}
-#          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
-#
-#      - name: Update the deployment version
-#        run: |
-#          DEPLOY_INFO_FILE=${{ github.workspace }}/cloudformation/${{ needs.deploy.outputs.account_name }}/${{ needs.deploy.outputs.stack_name }}/deploy.info
-#          TIME_STAMP="$(date +%R-%d-%m-%Y)"
-#
-#          if [[ -f "$DEPLOY_INFO_FILE" ]]; then
-#              rm $DEPLOY_INFO_FILE
-#          fi
-#
-#          echo "deployment_version=${{ needs.deploy.outputs.deployment_version }}" > $DEPLOY_INFO_FILE
-#          echo "deployment_time=$TIME_STAMP UTC" >> $DEPLOY_INFO_FILE
-#          echo "deployment_template=${{ needs.deploy.outputs.template_name }}" >> $DEPLOY_INFO_FILE
-#          echo "user=${{ github.actor }}" >> $DEPLOY_INFO_FILE
-#
-#      - name: Update the README.md
-#        run: |
-#          CF_FOLDER=${{ github.workspace }}/cloudformation/
-#
-#          echo '# Deployment info' > README.md
-#
-#          for account in $CF_FOLDER*; do
-#            if [ -d "$account" ]; then
-#          	  echo "## Account: $(echo $account | awk -F'/' ' { print $(NF) } ')" >> README.md
-#          	  for stack in $account/*; do
-#          		if [ -f "$stack/deploy.info" ]; then
-#          			echo "### Stack: $(echo  $stack | awk -F'/' ' { print $(NF) } ')" >> README.md
-#          			echo '```' >> README.md
-#          			cat $stack/deploy.info >> README.md
-#          			echo '```' >> README.md
-#          		fi
-#          	  done
-#          	  echo "" >> README.md
-#            fi
-#          done
-#
-#      - name: Setup git config
-#        run: |
-#          git config user.email "github-svc@ohpen.com"
-#          git config user.name "GitHub Actions"
-#      - name: Commit files
-#        run: |
-#          if [ -n "$(git status --porcelain)" ]; then
-#           git add ${{ github.workspace }}/cloudformation/${{ needs.deploy.outputs.account_name }}/${{ needs.deploy.outputs.stack_name }}/deploy.info
-#           git add README.md
-#           git commit -m "[${{ needs.deploy.outputs.environment }}] [skip ci] Deployed: '${{ needs.deploy.outputs.template_name }}' with version: '${{ needs.deploy.outputs.deployment_version }}' to '${{ needs.deploy.outputs.stack_name }}' CF stack"
-#           git push;
-#          else
-#           echo "no change detected";
-#          fi
+
+  update_deployment_info:
+    needs: prepare-deployment
+    runs-on: ubuntu-latest
+    name: Update the deployment info
+    steps:
+      - name: Checkout Configuration repository sources
+        uses: actions/checkout@v2
+        with:
+          repository: ohpen/odm-eureka-cfg
+          ref: tst
+          token: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+
+      - name: Update the deployment version
+        run: |
+          DEPLOY_INFO_FILE=${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info
+          TIME_STAMP="$(date +%R-%d-%m-%Y)"
+
+          if [[ -f "$DEPLOY_INFO_FILE" ]]; then
+            rm $DEPLOY_INFO_FILE
+          fi
+
+          echo "deployment_version=${{ steps.get_version.outputs.ServiceVersion }}" > $DEPLOY_INFO_FILE
+          echo "deployment_time=$TIME_STAMP UTC" >> $DEPLOY_INFO_FILE
+          echo "deployment_template=${{ inputs.TEMPLATE_NAME }}" >> $DEPLOY_INFO_FILE
+          echo "user=${{ github.actor }}" >> $DEPLOY_INFO_FILE
+
+      - name: Update the README.md
+        run: |
+          CF_FOLDER=${{ github.workspace }}/cloudformation/
+
+          echo '# Deployment info' > README.md
+
+          for account in $CF_FOLDER*; do
+            if [ -d "$account" ]; then
+          	  echo "## Account: $(echo $account | awk -F'/' ' { print $(NF) } ')" >> README.md
+          	  for stack in $account/*; do
+          		if [ -f "$stack/deploy.info" ]; then
+          			echo "### Stack: $(echo  $stack | awk -F'/' ' { print $(NF) } ')" >> README.md
+          			echo '```' >> README.md
+          			cat $stack/deploy.info >> README.md
+          			echo '```' >> README.md
+          		fi
+          	  done
+          	  echo "" >> README.md
+            fi
+          done
+
+      - name: Setup git config
+        run: |
+          git config user.email "github-svc@ohpen.com"
+          git config user.name "GitHub Actions"
+      - name: Commit files
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+           git add ${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info
+           git add README.md
+           git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
+           git push;
+          else
+           echo "no change detected";
+          fi
