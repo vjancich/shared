@@ -178,12 +178,12 @@ jobs:
           mv ${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info output/${{ inputs.account_name }}/${{ inputs.stack_name }}
           mv ${{ github.workspace }}/README.md output/${{ inputs.account_name }}/${{ inputs.stack_name }}
           
-          echo ARTIFACT_ID="output/deployment" >> $GITHUB_ENV
+          echo ARTIFACT_ID="output/${{ inputs.account_name }}/${{ inputs.stack_name }}" >> $GITHUB_ENV
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: artifakty
+          name: ${{ env.ARTIFACT_ID }}
           path: output/**
           retention-days: 1
 
