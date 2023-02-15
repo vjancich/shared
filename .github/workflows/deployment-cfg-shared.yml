@@ -255,9 +255,12 @@ jobs:
 
       - name: Commit files
         run: |
+          mv output/artefakty/davincicloud-adaxio/eureka-server/deploy.info ${{ github.workspace }}/cloudformation/davincicloud-adaxio/eureka-server
+          mv output/artefakty/README.md ${{ github.workspace }}
+          
           if [ -n "$(git status --porcelain)" ]; then
-           git add output/artefakty/davincicloud-adaxio/eureka-server/deploy.info
-           git add output/artefakty/README.md
+           git add ${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info
+           git add README.md
            git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
            git push;
           else

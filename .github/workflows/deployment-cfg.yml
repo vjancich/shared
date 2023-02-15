@@ -178,9 +178,6 @@ jobs:
           mv ${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info output/${{ inputs.account_name }}/${{ inputs.stack_name }}
           mv ${{ github.workspace }}/README.md output
           
-          ARTIFACT_ID=`echo "${{ inputs.account_name }}/${{ inputs.stack_name }}" | sed 's#/#-#g'`
-          echo ARTIFACT_ID="$ARTIFACT_ID" >> $GITHUB_ENV
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
