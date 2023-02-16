@@ -181,7 +181,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: artefakty
+          name: cloudformation
           path: output/**
           retention-days: 1
 

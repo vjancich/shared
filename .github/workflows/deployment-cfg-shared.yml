@@ -255,23 +255,15 @@ jobs:
 
       - name: Commit files
         run: |
-          for directory in output/artefakty/**/*; do
-            echo "account je"
-            account=$(echo $directory | cut -d "/" -f3)
-            echo $account
-            echo "stack je"
-            stack=$(echo $directory | cut -d "/" -f4)
-            echo $stack
-            mv output/artefakty/$account/$stack/deploy.info cloudformation/$account/$stack
-            git add cloudformation/$account/$stack/deploy.info
-          done
+          cp -rf output/* .
+          rm -rf output
           
-          mv output/artefakty/README.md .
-
           if [ -n "$(git status --porcelain)" ]; then
-           git add README.md
-           git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
-           git push;
+            git add cloudformation/$account/$stack/deploy.info
+            git add README.md
+            git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
+            git push;
           else
-           echo "no change detected";
+            echo "no change detected";
           fi
+
