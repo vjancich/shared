@@ -255,7 +255,7 @@ jobs:
 
       - name: Commit files
         run: |
-          cp -rf output/* .
+          cp -rf output/artefacts/* .
           rm -rf output
           
           if [ -n "$(git status --porcelain)" ]; then
