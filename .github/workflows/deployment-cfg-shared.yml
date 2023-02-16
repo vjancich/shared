@@ -255,18 +255,16 @@ jobs:
 
       - name: Commit files
         run: |
-          echo ${{ github.workspace }}
-          echo "$GITHUB_WORKSPACE"
-          echo ${{ runner.workspace }}
-          echo $RUNNER_WORKSPACE
-          cat output/artefakty/davincicloud-adaxio/eureka-server/deploy.info
-          ls
-          echo "Bla"
-          mv output/artefakty/davincicloud-adaxio/eureka-server/deploy.info cloudformation/davincicloud-adaxio/eureka-server
+          for directory in output; do
+            account=$(echo $directory | cut -d "/" -f2)
+            stack=$(echo $directory | cut -d "/" -f3)
+            mv output/artefakty/$account/$stack/deploy.info cloudformation/$account/$stack
+            git add cloudformation/$account/$stack/deploy.info
+          done
+          
           mv output/artefakty/README.md .
 
           if [ -n "$(git status --porcelain)" ]; then
-           git add cloudformation/davincicloud-adaxio/eureka-server/deploy.info
            git add README.md
            git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
            git push;
