@@ -255,9 +255,13 @@ jobs:
 
       - name: Commit files
         run: |
-          for directory in output; do
+          for directory in output/**/*; do
+            echo "account je"
             account=$(echo $directory | cut -d "/" -f2)
+            echo $account
+            echo "stack je"
             stack=$(echo $directory | cut -d "/" -f3)
+            echo $stack
             mv output/artefakty/$account/$stack/deploy.info cloudformation/$account/$stack
             git add cloudformation/$account/$stack/deploy.info
           done
