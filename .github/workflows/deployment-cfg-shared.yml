@@ -259,7 +259,7 @@ jobs:
           rm -rf output
           
           if [ -n "$(git status --porcelain)" ]; then
-            git add cloudformation/$account/$stack/deploy.info
+            git add cloudformation/*
             git add README.md
             git commit -m "[skip ci] Deployed: '${{ inputs.TEMPLATE_NAME }}' with version: '${{ steps.get_version.outputs.ServiceVersion }}' to '${{ inputs.stack_name }}' CF stack"
             git push;
