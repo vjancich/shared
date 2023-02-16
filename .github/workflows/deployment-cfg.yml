@@ -174,7 +174,7 @@ jobs:
 
       - name: Prepare output
         run: |
-          mkdir -p output/${{ inputs.account_name }}/${{ inputs.stack_name }}
+          mkdir -p output/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}
           mv ${{ github.workspace }}/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}/deploy.info output/cloudformation/${{ inputs.account_name }}/${{ inputs.stack_name }}
           mv ${{ github.workspace }}/README.md output
           
